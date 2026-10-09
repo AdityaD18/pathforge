@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T08:06:45+00:00",
+  "generated_at": "2026-10-09T08:09:07+00:00",
   "data": {
     "synthetic": true,
     "description": "Simulated learners answering PathForge's real question bank under a documented IRT-style generative model (ml/data_generation.py). Labels are the simulator's latent ability levels.",
@@ -431,7 +431,7 @@
     "python": "3.13.16",
     "scikit_learn": "1.9.1",
     "numpy": "2.5.3",
-    "pandas": "3.0.5"
+    "pandas": "3.0.6"
   },
   "model_version": "logistic_regression-s42-f96c92fd"
 }
