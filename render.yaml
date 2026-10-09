@@ -1,0 +1,27 @@
+# Render Blueprint for the FastAPI backend (https://render.com/docs/blueprint-spec)
+# Secrets are declared with `sync: false`, so Render prompts for them on first deploy.
+services:
+  - type: web
+    name: pathforge-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    # Training is deterministic (fixed seed) and takes well under a minute. Retraining at build time
+    # guarantees the model artifact matches the pinned scikit-learn version actually installed.
+    buildCommand: pip install -r requirements.txt && python -m ml.train
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL          # Supabase pooler connection string (server-side only)
+        sync: false
+      - key: SUPABASE_URL          # https://<project-ref>.supabase.co — used to fetch the JWKS
+        sync: false
+      - key: CORS_ORIGINS          # e.g. https://pathforge.vercel.app
+        sync: false
+      - key: DB_POOL_MAX
+        value: "5"
