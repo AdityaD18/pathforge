@@ -1,0 +1,29 @@
+# Supabase CLI configuration (https://supabase.com/docs/guides/local-development)
+# `supabase start` runs a local stack; `supabase db push` applies ./migrations to a linked project;
+# `supabase db reset` applies migrations + seed.sql locally.
+project_id = "pathforge-ai"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 16
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/callback"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false

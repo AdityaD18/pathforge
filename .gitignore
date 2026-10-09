@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+backend/ml/data/
+# Node
+node_modules/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+next-env.d.ts
+# Env & secrets
+.env
+.env.*
+!.env.example
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+# OS
+.DS_Store
