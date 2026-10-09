@@ -5,15 +5,20 @@ Adaptive learning paths for technical careers. A learner picks a target career, 
 - a **proficiency estimate per topic** from a trained, evaluated classifier (with probabilities, not just a score),
 - a **prerequisite-aware roadmap** built with NetworkX, scheduled into weeks from their study time,
 - **content-based resource recommendations** (TF-IDF + cosine similarity) with a breakdown of why each one ranks where it does,
-- an **adaptive loop**: every submission updates mastery, unlocks topics, re-ranks resources and records what changed.
+- an **adaptive loop**: every submission updates mastery, unlocks topics, re-ranks resources and records what changed,
+- **real courses one click away**: 185 hand-picked resources from Coursera, Udemy, freeCodeCamp, Khan Academy, DataCamp, Harvard CS50, MIT OCW and official docs, labelled free / free to start / paid,
+- **progress you can see**: activity calendar and streaks, career-readiness gauge, topics-left burn-down with a projected finish date, mastery-over-time lines and badges, all computed from the learner's own activity,
+- **15 themes** (dark, light and high contrast) plus "match my device" and a custom accent colour, saved to the account.
 
 The model evaluation page publishes every metric from the training run, including the baselines it is compared against and the limitations of training on simulated learners.
 
 | Dashboard | Roadmap |
 |---|---|
-| ![Dashboard with next steps, skill profile and plan changes](docs/screenshots/dashboard.jpg) | ![Prerequisite skill graph](docs/screenshots/roadmap.jpg) |
-| **Assessment result** | **Model evaluation** |
-| ![Assessment result with probabilities and plan changes](docs/screenshots/assessment-result.jpg) | ![Model evaluation page](docs/screenshots/model-evaluation.jpg) |
+| ![Dashboard with progress ring, readiness gauge, streak and next steps](docs/screenshots/dashboard.jpg) | ![Prerequisite skill map](docs/screenshots/roadmap.jpg) |
+| **Courses** | **Progress (Paper theme)** |
+| ![Course recommendations with providers, prices and match scores](docs/screenshots/recommendations.jpg) | ![Activity calendar, burn-down and roadmap breakdown](docs/screenshots/progress-light.jpg) |
+| **Assessment result (Aurora theme)** | **Model evaluation** |
+| ![Assessment result with mastery ring and level probabilities](docs/screenshots/assessment-result.jpg) | ![Model evaluation page](docs/screenshots/model-evaluation.jpg) |
 
 | Layer | Technology |
 |---|---|
@@ -44,7 +49,7 @@ Supabase Postgres ── catalog (public read), learner data (RLS: own rows only
 
 - **One data path.** The browser never reads learner tables directly; all reads and writes go through the API. RLS is still enforced as defence in depth, and the RLS tests exercise it as the `anon` and `authenticated` roles.
 - **Scores can't be forged.** Learners have no insert/update rights on assessments, responses or mastery. Correctness is computed on the server from answer keys that clients cannot select.
-- **The catalog is code.** Careers, topics, prerequisite edges, 108 resources and 156 questions live in `backend/ml/catalog_data/*.json`, validated on load (unique IDs, acyclic prerequisites, coverage). `supabase/seed.sql` is generated from it, and CI fails if the two drift.
+- **The catalog is code.** Careers, topics, prerequisite edges, 185 resources and 156 questions live in `backend/ml/catalog_data/*.json`, validated on load (unique IDs, acyclic prerequisites, coverage). `supabase/seed.sql` is generated from it, and CI fails if the two drift.
 
 ### Repository layout
 
@@ -64,14 +69,14 @@ backend/
     ranking.py        explainable ranking
     roadmap.py        prerequisite-aware roadmap + constraint checker
     artifacts/        proficiency_model.joblib, metrics.json
-  scripts/        seed generation, local DB reset, metric reproducibility check, local auth stand-in
+  scripts/        seed generation, local DB reset, metric check, link check, demo learners, local auth stand-in
   tests/          ML unit tests, API integration tests, RLS tests
 frontend/         Next.js app (src/app, src/components, src/lib)
 supabase/         migrations/, seed.sql, config.toml
 e2e/              browser end-to-end test (puppeteer)
 docs/model-card.md
 render.yaml       Render blueprint for the API
-.github/workflows/ci.yml
+.github/workflows/ci.yml, links.yml
 ```
 
 ---
@@ -104,7 +109,18 @@ Candidates come only from **unlocked** roadmap topics (all prerequisites mastere
 | Format preference | 0.12 | Matches the learner's preferred formats |
 | Fits your week | 0.08 | Resource length vs. weekly study time |
 
-The interface shows each component's contribution, the reasons in plain language, and the terms that drove the TF-IDF match. Completed resources drop out; at most three per topic are shown.
+The interface shows each component's contribution, the reasons in plain language, and the terms that drove the TF-IDF match. Completed resources drop out; at most three per topic are shown. Learners can filter by format, level and price (`cost`: free, freemium, paid).
+
+**Starting a course** opens the provider's page in a new tab and marks the resource *in progress*. When the learner comes back to PathForge, a prompt asks whether they finished it (with an optional 1–5 rating); finishing records a *completed* event. A weekly GitHub Action (`.github/workflows/links.yml`, `backend/scripts/check_links.py`) checks every course URL and fails on dead links; sites that block bots are reported separately rather than counted as broken.
+
+### Progress insights
+
+`/api/me/dashboard` and `/api/me/analytics` include an `insights` block (`backend/app/services/insights.py`), computed only from stored activity and bucketed in the learner's own time zone (`?tz=`):
+
+- **Daily activity and streaks**: assessments submitted and resources completed per day for 26 weeks; current and longest streak; active days this week.
+- **Career readiness**: weighted average over the career's goal topics of `min(mastery ÷ 70%, 1)`, with core topics weighted 3 and unassessed topics counting as 0.
+- **Topics left over time** from recorded adaptation events, plus a projected finish date from the current schedule.
+- **Badges** with real progress (first assessment, first mastery, streaks, resources completed, hard questions answered, calibration of "sure" answers, a 30-point comeback, halfway and path complete).
 
 ### Adaptive loop
 
@@ -135,7 +151,7 @@ Figures from the committed training run (`backend/ml/artifacts/metrics.json`); C
 - The mastery score tracks the simulator's latent ability better than raw accuracy (Spearman **0.781** vs 0.626).
 - Gradient boosting and logistic regression are effectively tied; boosting won cross-validation by less than one fold-to-fold standard deviation and is marginally worse on test log loss.
 - All 9 behavioural checks pass (e.g. all-wrong at any speed → beginner; all-right at a normal pace → advanced; rapid clicking → not counted).
-- Roadmaps: 0 prerequisite violations in 600 random roadmaps (6,043 steps). TF-IDF topic retrieval sanity check: precision@3 0.92, MRR 1.00 (random: 0.04, 0.14).
+- Roadmaps: 0 prerequisite violations in 600 random roadmaps (6,043 steps). TF-IDF topic retrieval sanity check: precision@3 0.95, MRR 1.00 (random: 0.04, 0.13).
 
 **These numbers measure how well the model recovers the simulator's ground truth, not how accurate it is for real people.** Read the [model card](docs/model-card.md) before relying on them.
 
@@ -256,8 +272,9 @@ Stated plainly, because a portfolio project should be honest about what it hasn'
 - **Assessments are short.** Five questions give limited evidence; a third of simulated test attempts are misclassified, nearly all by one level. Each topic has six questions, so frequent retakes repeat questions.
 - **The 3-second rapid-guess rule is a fixed heuristic**, not learned from real behaviour.
 - **The demo accounts' histories are simulated** (see Demo accounts). They show the product working end to end, not evidence about real learners.
-- **Recommendations aren't validated against learner outcomes.** The TF-IDF check only confirms topical relevance on a small, curated catalogue (108 resources). There's no collaborative signal and ratings aren't yet used for ranking.
-- **Resource links point to third-party sites** and may move; they were curated, not crawled, and aren't checked automatically.
+- **Recommendations aren't validated against learner outcomes.** The TF-IDF check only confirms topical relevance on a small, curated catalogue (185 resources). There's no collaborative signal and ratings aren't yet used for ranking.
+- **Resource links point to third-party sites** and may move or change price; they were curated and verified by hand in October 2026, not crawled. The weekly link check catches dead links but can't confirm content or pricing, and some platforms block automated checks.
+- **"Did you finish?" is self-reported.** Opening a course is recorded, but PathForge can't see what happens on the provider's site.
 - **Mastery estimates don't decay over time**, and completing a resource doesn't change mastery; only assessments do.
 - **No rate limiting** on the API, and assessments have no time limit or proctoring.
 - **Answer keys are in the repository.** RLS keeps them out of the browser, but anyone reading a public repo can see `catalog_data/questions.json`. For real use, keep the question bank in a private repository or load it from the database only.

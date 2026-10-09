@@ -13,7 +13,7 @@ from .. import repository as repo
 from ..auth import CurrentUser, current_user
 from ..db import get_conn
 from ..schemas import Profile, ProfileUpdate, ResourceProgressUpdate
-from ..services import analytics
+from ..services import analytics, insights
 from ..services.adaptation import describe_change
 from ..services.learner_state import load_state, recommendations, resource_payload
 
@@ -21,6 +21,7 @@ router = APIRouter(prefix="/api/me", tags=["learner"])
 
 FormatParam = Literal["video", "article", "course", "interactive", "book", "documentation"]
 LevelParam = Literal["beginner", "intermediate", "advanced"]
+CostParam = Literal["free", "freemium", "paid"]
 
 
 @router.get("/profile", response_model=Profile)
@@ -38,6 +39,8 @@ def update_profile(body: ProfileUpdate, user: CurrentUser = Depends(current_user
     before = load_state(conn, user.id)
     roadmap_before = before.roadmap()
     recs_before = [i["resource_id"] for i in recommendations(before, limit=5)["items"]] if roadmap_before else []
+    if "theme" in changes and changes["theme"] is None:
+        changes.pop("theme")  # theme is required; null means "leave unchanged"
     profile = repo.update_profile(conn, user.id, changes)
 
     plan_fields = ("target_career_id", "weekly_hours", "preferred_formats", "preferred_level", "learning_goal")
@@ -76,10 +79,11 @@ def roadmap(user: CurrentUser = Depends(current_user), conn: Connection = Depend
 def get_recommendations(limit: int = Query(9, ge=1, le=30),
                         format: list[FormatParam] | None = Query(None),
                         level: list[LevelParam] | None = Query(None),
+                        cost: list[CostParam] | None = Query(None),
                         topic: str | None = Query(None, max_length=64, pattern=r"^[a-z0-9-]+$"),
                         user: CurrentUser = Depends(current_user), conn: Connection = Depends(get_conn)):
     state = load_state(conn, user.id)
-    return recommendations(state, limit=limit, formats=format, levels=level, topic_id=topic)
+    return recommendations(state, limit=limit, formats=format, levels=level, topic_id=topic, costs=cost)
 
 
 @router.get("/resources")
@@ -121,13 +125,16 @@ def events(limit: int = Query(20, ge=1, le=100), user: CurrentUser = Depends(cur
     return repo.list_events(conn, user.id, limit)
 
 
+TzParam = Query(None, max_length=64, pattern=r"^[A-Za-z0-9_+\-/]+$", description="IANA time zone, e.g. Asia/Kolkata")
+
+
 @router.get("/analytics")
-def get_analytics(user: CurrentUser = Depends(current_user), conn: Connection = Depends(get_conn)):
-    return analytics.build(conn, user.id)
+def get_analytics(tz: str | None = TzParam, user: CurrentUser = Depends(current_user), conn: Connection = Depends(get_conn)):
+    return analytics.build(conn, user.id, tz)
 
 
 @router.get("/dashboard")
-def dashboard(user: CurrentUser = Depends(current_user), conn: Connection = Depends(get_conn)):
+def dashboard(tz: str | None = TzParam, user: CurrentUser = Depends(current_user), conn: Connection = Depends(get_conn)):
     c = load_catalog()
     state = load_state(conn, user.id)
     rm = state.roadmap()
@@ -155,4 +162,6 @@ def dashboard(user: CurrentUser = Depends(current_user), conn: Connection = Depe
             "resources_completed": sum(1 for p in state.progress.values() if p["status"] == "completed"),
             "resources_in_progress": sum(1 for p in state.progress.values() if p["status"] == "in_progress"),
         },
+        "insights": insights.build(conn, user.id, state, history, repo.response_stats(conn, user.id),
+                                   repo.list_events(conn, user.id, 1000), tz),
     }

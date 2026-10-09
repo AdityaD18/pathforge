@@ -10,6 +10,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 Format = Literal["video", "article", "course", "interactive", "book", "documentation"]
 Level = Literal["beginner", "intermediate", "advanced"]
 ProgressStatus = Literal["saved", "in_progress", "completed"]
+# Appearance themes (frontend/src/lib/themes.ts defines the palettes). "system" follows the device's light/dark setting.
+Theme = Literal["system", "midnight", "aurora", "nebula", "ocean", "ember", "forest", "cyberpunk", "slate", "mono",
+                "paper", "sky", "sakura", "mint", "sunset", "contrast", "custom"]
 
 
 class StrictModel(BaseModel):
@@ -24,6 +27,13 @@ class ProfileUpdate(StrictModel):
     preferred_formats: list[Format] | None = Field(None, max_length=6)
     preferred_level: Level | None = None
     learning_goal: str | None = Field(None, max_length=500)
+    theme: Theme | None = None
+    theme_accent: str | None = Field(None, pattern=r"^#[0-9a-fA-F]{6}$")
+
+    @field_validator("theme_accent")
+    @classmethod
+    def _lower(cls, v):
+        return v.lower() if v else v
 
     @field_validator("preferred_formats")
     @classmethod
@@ -39,6 +49,8 @@ class Profile(BaseModel):
     preferred_formats: list[str]
     preferred_level: str | None
     learning_goal: str | None
+    theme: str = "system"
+    theme_accent: str | None = None
     onboarded_at: datetime | None
     created_at: datetime
     updated_at: datetime

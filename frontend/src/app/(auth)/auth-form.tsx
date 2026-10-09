@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { BarChart3, Cpu, LayoutTemplate, Loader2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,15 @@ import { isSupabaseConfigured } from "@/lib/env";
 import { getSupabase } from "@/lib/supabase/client";
 
 const field =
-  "h-11 w-full rounded-md border border-line bg-abyss/70 px-3 text-[15px] text-ink placeholder:text-haze focus:border-electric focus:outline-none";
+  "h-12 w-full rounded-xl border border-line bg-abyss/70 px-3.5 text-base text-ink placeholder:text-haze focus:border-electric focus:outline-none";
+
+// Simulated showcase learners (see README "Demo accounts"); the password is public by design.
+const DEMO_PASSWORD = "PathForgeDemo2026";
+const DEMOS = [
+  { email: "priya.sharma@example.com", name: "Priya", career: "Data Analyst", weeks: 13, icon: BarChart3 },
+  { email: "arjun.mehta@example.com", name: "Arjun", career: "ML Engineer", weeks: 10, icon: Cpu },
+  { email: "sara.thomas@example.com", name: "Sara", career: "Frontend Developer", weeks: 7, icon: LayoutTemplate },
+];
 
 export function AuthForm({ mode }: { mode: "login" | "signup" }) {
   const router = useRouter();
@@ -32,6 +40,21 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
       if (data.session) router.replace(next);
     });
   }, [router, next]);
+
+  async function demo(email: string) {
+    setError(null);
+    setBusy(true);
+    try {
+      const { error } = await getSupabase().auth.signInWithPassword({ email, password: DEMO_PASSWORD });
+      if (error) throw error;
+      router.replace("/dashboard");
+      router.refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't sign in to the demo account.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -103,6 +126,23 @@ export function AuthForm({ mode }: { mode: "login" | "signup" }) {
               {mode === "login" ? "Sign in" : "Create account"}
             </Button>
           </form>
+        )}
+
+        {mode === "login" && isSupabaseConfigured && (
+          <div className="mt-8 rounded-2xl border border-line-soft bg-panel/60 p-4">
+            <p className="flex items-center gap-2 text-[15px] font-medium text-ink"><Sparkles className="size-4 text-violet-soft" /> Explore a demo learner</p>
+            <p className="mt-0.5 text-sm text-haze">Simulated accounts with weeks of history.</p>
+            <div className="mt-3 grid gap-2">
+              {DEMOS.map((d) => (
+                <button key={d.email} type="button" disabled={busy} onClick={() => demo(d.email)}
+                  className="flex items-center gap-3 rounded-xl border border-line-soft px-3 py-2.5 text-left transition-colors hover:border-electric/50 hover:bg-electric/[0.06] disabled:opacity-50">
+                  <span className="flex size-9 items-center justify-center rounded-lg bg-accent-gradient text-on-accent"><d.icon className="size-5" /></span>
+                  <span className="min-w-0 flex-1"><span className="block text-[15px] text-ink">{d.name} · {d.career}</span>
+                    <span className="text-sm text-haze">{d.weeks} weeks of activity</span></span>
+                </button>
+              ))}
+            </div>
+          </div>
         )}
 
         <p className="mt-6 text-sm text-mist">

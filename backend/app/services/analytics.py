@@ -12,12 +12,13 @@ from ml.catalog import load_catalog
 from ml.roadmap import required_topics
 
 from .. import repository as repo
+from . import insights
 from .learner_state import load_state
 
 CONFIDENCE_LABELS = {1: "Guess", 2: "Unsure", 3: "Sure"}
 
 
-def build(conn: Connection, user_id: UUID) -> dict:
+def build(conn: Connection, user_id: UUID, tz: str | None = None) -> dict:
     c = load_catalog()
     state = load_state(conn, user_id)
     history = repo.submitted_history(conn, user_id)
@@ -98,4 +99,5 @@ def build(conn: Connection, user_id: UUID) -> dict:
         "pace": pace,
         "activity": activity,
         "resources": {"by_status": by_status, "completed_by_format": dict(by_format)},
+        "insights": insights.build(conn, user_id, state, history, responses, repo.list_events(conn, user_id, 1000), tz),
     }

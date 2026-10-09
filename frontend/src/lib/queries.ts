@@ -15,19 +15,30 @@ export const useTopics = () => useQuery({ queryKey: ["topics"], queryFn: () => a
 export const useMetrics = () => useQuery({ queryKey: ["ml-metrics"], queryFn: () => api<MlMetrics>("/api/ml/metrics", { auth: false }), ...forever });
 
 export const useProfile = (enabled = true) => useQuery({ queryKey: ["profile"], queryFn: () => api<Profile>("/api/me/profile"), enabled });
-export const useDashboard = () => useQuery({ queryKey: ["dashboard"], queryFn: () => api<Dashboard>("/api/me/dashboard") });
+/** The learner's IANA time zone, so streaks and "this week" follow their own calendar. */
+const tz = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  } catch {
+    return undefined;
+  }
+};
+
+export const useDashboard = () => useQuery({ queryKey: ["dashboard"], queryFn: () => api<Dashboard>(`/api/me/dashboard${qs({ tz: tz() })}`) });
 export const useMastery = () => useQuery({ queryKey: ["mastery"], queryFn: () => api<MasteryRow[]>("/api/me/mastery") });
-export const useAnalytics = () => useQuery({ queryKey: ["analytics"], queryFn: () => api<Analytics>("/api/me/analytics") });
+export const useAnalytics = () => useQuery({ queryKey: ["analytics"], queryFn: () => api<Analytics>(`/api/me/analytics${qs({ tz: tz() })}`) });
 export const useMyResources = () => useQuery({ queryKey: ["my-resources"], queryFn: () => api<(ResourceView & { topic_name: string })[]>("/api/me/resources") });
 export const useAssessments = () => useQuery({ queryKey: ["assessments"], queryFn: () => api<AssessmentRow[]>("/api/assessments?limit=200") });
 
 export const useRoadmap = (enabled = true) =>
   useQuery({ queryKey: ["roadmap"], queryFn: () => api<Roadmap>("/api/me/roadmap"), enabled, retry: (n, e) => (e as { status?: number }).status !== 409 && n < 2 });
 
-export function useRecommendations(filters: { format?: string[]; level?: string[]; topic?: string | null; limit?: number }) {
+export function useRecommendations(filters: { format?: string[]; level?: string[]; cost?: string[]; topic?: string | null; limit?: number }) {
   return useQuery({
     queryKey: ["recommendations", filters],
-    queryFn: () => api<Recommendations>(`/api/me/recommendations${qs({ format: filters.format, level: filters.level, topic: filters.topic, limit: filters.limit ?? 12 })}`),
+    queryFn: () => api<Recommendations>(`/api/me/recommendations${qs({
+      format: filters.format, level: filters.level, cost: filters.cost, topic: filters.topic, limit: filters.limit ?? 12,
+    })}`),
     retry: (n, e) => ![404, 409].includes((e as { status?: number }).status ?? 0) && n < 2,
   });
 }
@@ -51,6 +62,16 @@ export function useUpdateProfile() {
   });
 }
 
+/** Saves only the appearance fields; avoids refetching the whole learner state. */
+export function useSaveTheme() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: { theme: string; theme_accent: string | null }) =>
+      api<Profile>("/api/me/profile", { method: "PUT", body: JSON.stringify(body) }),
+    onSuccess: (p) => qc.setQueryData(["profile"], p),
+  });
+}
+
 export function useStartAssessment() {
   return useMutation({
     mutationFn: (topic_id: string) => api<AssessmentPayload>("/api/assessments", { method: "POST", body: JSON.stringify({ topic_id }) }),
@@ -69,10 +90,10 @@ export function useSubmitAssessment(id: string) {
 export function useSetProgress() {
   const invalidate = useInvalidateLearner();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "saved" | "in_progress" | "completed" | null }) =>
+    mutationFn: ({ id, status, rating }: { id: string; status: "saved" | "in_progress" | "completed" | null; rating?: number | null }) =>
       status === null
         ? api<void>(`/api/me/resources/${id}/progress`, { method: "DELETE" })
-        : api(`/api/me/resources/${id}/progress`, { method: "PUT", body: JSON.stringify({ status }) }),
+        : api(`/api/me/resources/${id}/progress`, { method: "PUT", body: JSON.stringify(rating ? { status, rating } : { status }) }),
     onSuccess: invalidate,
   });
 }

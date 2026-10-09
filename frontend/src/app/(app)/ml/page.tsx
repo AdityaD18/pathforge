@@ -1,19 +1,23 @@
 "use client";
 
-import { AlertTriangle, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
+import { AlertTriangle, CheckCircle2, FlaskConical } from "lucide-react";
+import { useState } from "react";
 import { CartesianGrid, Line, ComposedChart, ReferenceLine, ResponsiveContainer, Scatter, Tooltip, XAxis, YAxis } from "recharts";
 
 import { AXIS, GRID, SERIES, TOOLTIP_LABEL, TOOLTIP_STYLE } from "@/components/charts/chart-kit";
 import { ErrorState, PageHeader, Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
-import { cn, fixed, heatColor, heatInk, LEVEL_LABEL, pct } from "@/lib/format";
+import { C, cn, fixed, heatColor, heatInk, LEVEL_LABEL, pct } from "@/lib/format";
 import { useMetrics } from "@/lib/queries";
 import type { MlMetrics } from "@/lib/types";
 
 function HBar({ value, max, label, emphasis }: { value: number; max: number; label: string; emphasis?: boolean }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="h-1.5 flex-1 rounded-full bg-white/[0.06]">
-        <div className="h-full rounded-full" style={{ width: `${Math.max(0, (value / max) * 100)}%`, background: emphasis ? SERIES : "#3a4a80" }} />
+      <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-ink/[0.07]">
+        <motion.div className="h-full rounded-full" initial={{ width: 0 }} whileInView={{ width: `${Math.max(0, (value / max) * 100)}%` }}
+          viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+          style={{ background: emphasis ? "linear-gradient(90deg,var(--pf-accent),var(--pf-accent-2))" : C.locked }} />
       </div>
       <span className="w-14 text-right text-xs tabular-nums text-ink">{label}</span>
     </div>
@@ -59,27 +63,37 @@ function Comparison({ m }: { m: MlMetrics }) {
 }
 
 function Confusion({ title, cm }: { title: string; cm: MlMetrics["test"]["confusion_matrix"] }) {
+  const [hover, setHover] = useState<[number, number] | null>(null);
+  const [counts, setCounts] = useState(false);
+  const total = cm.matrix.flat().reduce((a, b) => a + b, 0);
   return (
     <figure>
-      <figcaption className="mb-3 text-sm text-ink">{title}</figcaption>
-      <table className="border-separate border-spacing-[3px] text-xs">
+      <figcaption className="mb-3 flex items-center justify-between gap-3 text-[15px] text-ink">
+        {title}
+        <button type="button" onClick={() => setCounts(!counts)} className="rounded-full border border-line-soft px-2.5 py-0.5 text-xs text-mist hover:text-ink">
+          {counts ? "Show %" : "Show counts"}
+        </button>
+      </figcaption>
+      <table className="border-separate border-spacing-1 text-sm" onMouseLeave={() => setHover(null)}>
         <thead>
           <tr><th /><th colSpan={3} className="pb-1 font-normal text-mist">Predicted</th></tr>
-          <tr><th />{cm.labels.map((l) => <th key={l} className="w-[84px] font-normal text-mist">{LEVEL_LABEL[l]}</th>)}</tr>
+          <tr><th />{cm.labels.map((l, j) => <th key={l} className={cn("w-[92px] font-normal", hover?.[1] === j ? "text-ink" : "text-mist")}>{LEVEL_LABEL[l]}</th>)}</tr>
         </thead>
         <tbody>
           {cm.matrix.map((row, i) => {
-            const total = row.reduce((a, b) => a + b, 0);
+            const rowTotal = row.reduce((a, b) => a + b, 0);
             return (
               <tr key={cm.labels[i]}>
-                <th scope="row" className="pr-2 text-right font-normal text-mist">{LEVEL_LABEL[cm.labels[i]]}</th>
+                <th scope="row" className={cn("pr-2 text-right font-normal", hover?.[0] === i ? "text-ink" : "text-mist")}>{LEVEL_LABEL[cm.labels[i]]}</th>
                 {row.map((v, j) => {
-                  const share = total ? v / total : 0;
+                  const share = rowTotal ? v / rowTotal : 0;
+                  const dim = hover && hover[0] !== i && hover[1] !== j;
                   return (
-                    <td key={j} className="h-14 rounded-[4px] text-center tabular-nums" style={{ background: heatColor(share), color: heatInk(share) }}
+                    <td key={j} onMouseEnter={() => setHover([i, j])} tabIndex={0} onFocus={() => setHover([i, j])}
+                      className={cn("h-16 cursor-default rounded-lg text-center tabular-nums transition-opacity", i === j && "ring-2 ring-ink/30", dim && "opacity-40")}
+                      style={{ background: heatColor(share), color: heatInk(share) }}
                       title={`True ${cm.labels[i]}, predicted ${cm.labels[j]}: ${v} (${pct(share)} of row)`}>
-                      <span className="block text-[13px] font-medium">{pct(share)}</span>
-                      <span className="opacity-75">{v}</span>
+                      <span className="block text-base font-semibold">{counts ? v : pct(share)}</span>
                     </td>
                   );
                 })}
@@ -88,7 +102,10 @@ function Confusion({ title, cm }: { title: string; cm: MlMetrics["test"]["confus
           })}
         </tbody>
       </table>
-      <p className="mt-2 text-xs text-haze">Rows are the true level; shading is the share of that row.</p>
+      <p className="mt-2 min-h-5 text-sm text-mist">
+        {hover ? `${cm.matrix[hover[0]][hover[1]]} of ${total} attempts: true ${LEVEL_LABEL[cm.labels[hover[0]]].toLowerCase()}, predicted ${LEVEL_LABEL[cm.labels[hover[1]]].toLowerCase()}.`
+          : "Rows are the true level. Hover a cell."}
+      </p>
     </figure>
   );
 }
@@ -102,10 +119,10 @@ function Reliability({ m }: { m: MlMetrics }) {
         <ComposedChart margin={{ top: 10, right: 16, bottom: 18, left: -8 }}>
           <CartesianGrid {...GRID} vertical />
           <XAxis dataKey="x" type="number" domain={[33, 100]} ticks={[40, 60, 80, 100]} unit="%" {...AXIS}
-            label={{ value: "Predicted probability of the chosen level", fill: "#8a97bd", fontSize: 11, position: "insideBottom", offset: -12 }} />
+            label={{ value: "Predicted probability of the chosen level", fill: C.mist, fontSize: 13, position: "insideBottom", offset: -12 }} />
           <YAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} unit="%" {...AXIS} />
-          <Line data={diagonal} dataKey="d" stroke="#5d6a92" strokeDasharray="4 4" dot={false} isAnimationActive={false} legendType="none" />
-          <Scatter data={bins} dataKey="y" fill={SERIES} stroke="#101a3a" strokeWidth={2} isAnimationActive={false} />
+          <Line data={diagonal} dataKey="d" stroke={C.haze} strokeDasharray="4 4" dot={false} isAnimationActive={false} legendType="none" />
+          <Scatter data={bins} dataKey="y" fill={SERIES} stroke={C.panel} strokeWidth={2} isAnimationActive={false} />
           <ReferenceLine x={33.3} stroke="transparent" />
           <Tooltip contentStyle={TOOLTIP_STYLE} labelStyle={TOOLTIP_LABEL}
             content={({ active, payload }) => {
@@ -147,8 +164,8 @@ export default function MlPage() {
 
   return (
     <div>
-      <PageHeader title="Model evaluation"
-        description={`How PathForge estimates topic proficiency, and how well that works on learners the model never saw. Every figure below is read from the training run's metrics file (model ${m.model_version}, generated ${new Date(m.generated_at).toLocaleDateString()}).`} />
+      <PageHeader icon={FlaskConical} title="Model evaluation"
+        description={`How well the proficiency model works on learners it never saw. Read straight from the training run (model ${m.model_version}, ${new Date(m.generated_at).toLocaleDateString()}).`} />
 
       <div role="note" className="mb-8 flex gap-3 rounded-lg border border-developing/35 bg-developing/[0.06] px-5 py-4">
         <AlertTriangle className="mt-0.5 size-5 shrink-0 text-developing" />

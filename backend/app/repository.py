@@ -8,7 +8,7 @@ from psycopg import Connection
 from psycopg.types.json import Jsonb
 
 PROFILE_COLUMNS = ("display_name", "target_career_id", "weekly_hours", "preferred_formats",
-                   "preferred_level", "learning_goal")
+                   "preferred_level", "learning_goal", "theme", "theme_accent")
 
 
 # --- profiles ------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ def ensure_profile(conn: Connection, user_id: UUID) -> dict:
 def get_profile(conn: Connection, user_id: UUID) -> dict:
     row = conn.execute(
         "select id, display_name, target_career_id, weekly_hours, preferred_formats::text[] as preferred_formats, "
-        "preferred_level::text as preferred_level, learning_goal, onboarded_at, created_at, updated_at "
+        "preferred_level::text as preferred_level, learning_goal, theme, theme_accent, onboarded_at, created_at, updated_at "
         "from public.profiles where id = %s", (user_id,)).fetchone()
     return row
 

@@ -1,6 +1,7 @@
 export type Level = "beginner" | "intermediate" | "advanced";
 export type Format = "video" | "article" | "course" | "interactive" | "book" | "documentation";
 export type Difficulty = "easy" | "medium" | "hard";
+export type Cost = "free" | "freemium" | "paid";
 export type MasteryState = "not_assessed" | "beginning" | "developing" | "mastered";
 export type StepStatus = "ready" | "in_progress" | "locked" | "mastered";
 
@@ -32,6 +33,8 @@ export interface Profile {
   preferred_formats: Format[];
   preferred_level: Level | null;
   learning_goal: string | null;
+  theme: string;
+  theme_accent: string | null;
   onboarded_at: string | null;
   created_at: string;
   updated_at: string;
@@ -100,6 +103,8 @@ export interface ResourceView {
   est_minutes: number;
   description: string;
   tags: string[];
+  cost: Cost;
+  instructor: string | null;
   progress: { status: "saved" | "in_progress" | "completed"; rating: number | null } | null;
 }
 
@@ -220,6 +225,34 @@ export interface Dashboard {
   recommendations: Recommendations;
   recent_events: AdaptationEvent[];
   stats: { assessments_taken: number; topics_assessed: number; average_mastery: number | null; resources_completed: number; resources_in_progress: number };
+  insights: Insights;
+}
+
+export interface BadgeView {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  earned: boolean;
+  earned_at: string | null;
+  progress: number;
+  progress_label: string;
+}
+
+export interface Insights {
+  today: string;
+  daily: { date: string; assessments: number; resources: number; total: number }[];
+  streak: { current: number; longest: number; active_today: boolean; longest_ended: string | null };
+  week: { active_days: number; goal: number; days: { date: string; active: boolean; future: boolean }[] };
+  readiness: {
+    score: number; career_title: string; formula: string;
+    topics: { topic_id: string; name: string; weight: number; mastery_score: number | null; credit: number }[];
+  } | null;
+  breakdown: { total: number; mastered: number; developing: number; beginning: number; not_assessed: number } | null;
+  burndown: { at: string; remaining: number; trigger: string; weeks?: number | null }[];
+  forecast: { remaining: number; estimated_weeks: number; finish_date: string; weekly_hours: number } | null;
+  topic_history: { topic_id: string; name: string; points: { at: string; score: number }[] }[];
+  badges: BadgeView[];
 }
 
 export interface Analytics {
@@ -230,6 +263,7 @@ export interface Analytics {
   pace: { difficulty: Difficulty; answers: number; median_seconds: number | null; expected_seconds: number }[];
   activity: { week_start: string; assessments: number; resources_completed: number }[];
   resources: { by_status: Record<"saved" | "in_progress" | "completed", number>; completed_by_format: Record<string, number> };
+  insights: Insights;
 }
 
 export interface MetricsRow {

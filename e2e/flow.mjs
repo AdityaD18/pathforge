@@ -18,7 +18,7 @@ const answers = JSON.parse(fs.readFileSync(path.join(HERE, ".answers.json"), "ut
 const problems = [];
 
 async function launch() {
-  if (process.env.CHROME_PATH) return puppeteer.launch({ executablePath: process.env.CHROME_PATH, headless: true });
+  if (process.env.CHROME_PATH) return puppeteer.launch({ executablePath: process.env.CHROME_PATH, headless: true, args: process.getuid?.() === 0 ? ["--no-sandbox"] : [] });
   const { default: chromium } = await import("@sparticuz/chromium");
   return puppeteer.launch({ executablePath: await chromium.executablePath(), args: chromium.args, headless: true });
 }
@@ -45,7 +45,7 @@ async function answerAssessment(mode) {
   for (let i = 0; i < 5; i++) {
     await page.waitForSelector('[role="radiogroup"][aria-label="Answer options"]');
     await sleep(mode === "rapid" ? 250 : 3300);
-    const prompt = await page.$eval("h2", (h) => h.textContent);
+    const prompt = await page.$eval("h1", (h) => h.textContent);
     const correct = answers[prompt];
     await page.evaluate((correct, mode) => {
       const opts = [...document.querySelectorAll('[aria-label="Answer options"] [role="radio"]')];
@@ -55,9 +55,9 @@ async function answerAssessment(mode) {
     }, correct, mode);
     await clickText(mode === "weak" ? "Guessing" : "Sure", '[role="radio"]');
     await sleep(150);
-    if (i < 4) await clickText("Next question"); else await clickText("Submit answers");
+    if (i < 4) await clickText("Next"); else await clickText("See my result");
   }
-  await waitText(mode === "rapid" ? "wasn't counted" : "Estimated level", 20000);
+  await waitText(mode === "rapid" ? "Too fast to count" : "Level probabilities", 20000);
 }
 
 try {
@@ -70,7 +70,7 @@ try {
   await page.type('input[type="password"]', "correct-horse-battery");
   await clickText("Create account");
   await page.waitForFunction(() => location.pathname === "/onboarding", { timeout: 15000 });
-  await waitText("Target career");
+  await waitText("Where are you headed?");
   await shot("02-onboarding");
 
   await clickText("Data Analyst", '[role="radio"]');
@@ -79,13 +79,13 @@ try {
   await page.type("textarea", "Build dashboards and answer product questions with SQL");
   await clickText("Build my roadmap");
   await page.waitForFunction(() => location.pathname === "/dashboard", { timeout: 15000 });
-  await waitText("Next on your route");
+  await waitText("Up next");
   await shot("03-dashboard-new");
 
   // Weak first diagnostic on the first stop
   const firstStop = await page.$eval("ol li h3", (h) => h.textContent);
   console.log("first stop:", firstStop);
-  await clickText("Take diagnostic");
+  await clickText("Test me");
   await page.waitForFunction(() => location.pathname.startsWith("/assessments/"), { timeout: 15000 });
   await shot("04-assessment-question", false);
   await answerAssessment("weak");
@@ -95,18 +95,18 @@ try {
   await page.goto(`${BASE}/assessments`, { waitUntil: "networkidle0" });
   await waitText("History");
   await page.evaluate((name) => {
-    const li = [...document.querySelectorAll("li")].find((l) => l.textContent.startsWith(name));
-    [...li.querySelectorAll("button")].find((b) => b.textContent.includes("Retake")).click();
+    const li = [...document.querySelectorAll("li")].find((l) => l.querySelector("h3")?.textContent === name);
+    [...li.querySelectorAll("button")].find((b) => b.textContent.includes("Retest")).click();
   }, firstStop);
   await page.waitForFunction(() => /\/assessments\/[0-9a-f-]{36}/.test(location.pathname), { timeout: 15000 });
   await answerAssessment("strong");
   await shot("06-result-strong");
-  console.log("adaptation:", await page.evaluate(() => [...document.querySelectorAll("h2")].find((h) => h.textContent === "How your plan changed")?.nextElementSibling?.textContent));
+  console.log("adaptation:", await page.evaluate(() => [...document.querySelectorAll("h2")].find((h) => h.textContent === "What’s next" || h.textContent === "What's next")?.nextElementSibling?.textContent));
 
   // Also assess SQL strongly to unlock Advanced SQL
   await page.goto(`${BASE}/assessments`, { waitUntil: "networkidle0" });
   await page.evaluate(() => {
-    const li = [...document.querySelectorAll("li")].find((l) => l.textContent.startsWith("SQL Fundamentals"));
+    const li = [...document.querySelectorAll("li")].find((l) => l.querySelector("h3")?.textContent === "SQL Fundamentals");
     li.querySelector("button").click();
   });
   await page.waitForFunction(() => /\/assessments\/[0-9a-f-]{36}/.test(location.pathname), { timeout: 15000 });
@@ -115,7 +115,7 @@ try {
   // Rapid click-through attempt must be stored but not counted
   await page.goto(`${BASE}/assessments`, { waitUntil: "networkidle0" });
   await page.evaluate(() => {
-    const li = [...document.querySelectorAll("li")].find((l) => l.textContent.startsWith("Statistics Foundations"));
+    const li = [...document.querySelectorAll("li")].find((l) => l.querySelector("h3")?.textContent === "Statistics Foundations");
     li.querySelector("button").click();
   });
   await page.waitForFunction(() => /\/assessments\/[0-9a-f-]{36}/.test(location.pathname), { timeout: 15000 });
@@ -123,28 +123,33 @@ try {
   await shot("06b-not-counted", false);
 
   await page.goto(`${BASE}/dashboard`, { waitUntil: "networkidle0" });
-  await waitText("Career skill profile");
+  await waitText("Skill profile");
   await shot("07-dashboard-after");
 
   await page.goto(`${BASE}/roadmap`, { waitUntil: "networkidle0" });
   await page.waitForSelector(".react-flow__node");
   await shot("08-roadmap-graph", false);
-  await clickText("Schedule", '[role="tab"]');
-  await shot("09-roadmap-schedule");
+  await clickText("Timeline", '[role="tab"]');
+  await shot("09-roadmap-timeline");
 
   await page.goto(`${BASE}/recommendations`, { waitUntil: "networkidle0" });
-  await waitText("How the score adds up");
+  await waitText("Courses for you");
   await shot("10-recommendations");
-  await clickText("Start", "button");
-  await sleep(1200);
-  await clickText("Mark complete", "button");
+  // "Start course" opens the provider in a new tab and marks the course in progress.
+  const popup = new Promise((r) => browser.once("targetcreated", (t) => r(t)));
+  await clickText("Start course", "a");
+  const tab = await (await popup).page();
+  await tab?.close();
+  await page.bringToFront();
+  await sleep(1500);
+  await clickText("Done", "button");
   await sleep(1500);
 
   await page.goto(`${BASE}/recommendations?topic=advanced-sql`, { waitUntil: "networkidle0" });
-  await waitText("Showing resources for Advanced SQL");
+  await waitText("Advanced SQL & Query Tuning");
 
   await page.goto(`${BASE}/analytics`, { waitUntil: "networkidle0" });
-  await waitText("Mastery heatmap");
+  await waitText("Accuracy by topic and difficulty");
   await shot("11-analytics");
 
   await page.goto(`${BASE}/ml`, { waitUntil: "networkidle0" });
@@ -153,7 +158,7 @@ try {
 
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2 });
   await page.goto(`${BASE}/dashboard`, { waitUntil: "networkidle0" });
-  await waitText("Next on your route");
+  await waitText("Up next");
   await shot("13-mobile-dashboard");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   if (overflow) problems.push("mobile: horizontal overflow on /dashboard");
@@ -162,7 +167,9 @@ try {
   await page.screenshot({ path: `${OUT}/error.png`, fullPage: true });
 } finally {
   // An aborted RSC prefetch just means the test navigated away before it finished.
-  const real = [...new Set(problems)].filter((p) => !(p.startsWith("requestfailed") && p.includes("_rsc=") && p.includes("ERR_ABORTED")));
+  // Provider favicons come from an external icon service, unreachable from sandboxed test machines.
+  const real = [...new Set(problems)].filter((p) => !(p.startsWith("requestfailed") && p.includes("_rsc=") && p.includes("ERR_ABORTED"))
+    && !p.includes("icons.duckduckgo.com") && !(p.startsWith("console: Failed to load resource") && p.includes("net::ERR_")));
   console.log("\nProblems:", real.length ? "\n  " + real.join("\n  ") : "none");
   await browser.close();
   process.exitCode = real.length ? 1 : 0;

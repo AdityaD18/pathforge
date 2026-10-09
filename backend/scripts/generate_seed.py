@@ -64,12 +64,13 @@ def main() -> None:
     out += ["", "-- Resources"]
     for r in c.resources.values():
         out.append(
-            "insert into public.resources (id, topic_id, title, provider, url, format, difficulty, est_minutes, description, tags) values "
-            f"({lit(r.id)}, {lit(r.topic)}, {lit(r.title)}, {lit(r.provider)}, {lit(r.url)}, {lit(r.format)}, {lit(r.difficulty)}, "
-            f"{r.minutes}, {lit(r.description)}, {arr(r.tags)}) "
+            "insert into public.resources (id, topic_id, title, provider, instructor, url, format, difficulty, est_minutes, cost, "
+            "description, tags) values "
+            f"({lit(r.id)}, {lit(r.topic)}, {lit(r.title)}, {lit(r.provider)}, {lit(r.instructor) if r.instructor else 'null'}, "
+            f"{lit(r.url)}, {lit(r.format)}, {lit(r.difficulty)}, {r.minutes}, {lit(r.cost)}, {lit(r.description)}, {arr(r.tags)}) "
             "on conflict (id) do update set topic_id = excluded.topic_id, title = excluded.title, provider = excluded.provider, "
-            "url = excluded.url, format = excluded.format, difficulty = excluded.difficulty, est_minutes = excluded.est_minutes, "
-            "description = excluded.description, tags = excluded.tags;"
+            "instructor = excluded.instructor, url = excluded.url, format = excluded.format, difficulty = excluded.difficulty, "
+            "est_minutes = excluded.est_minutes, cost = excluded.cost, description = excluded.description, tags = excluded.tags;"
         )
 
     out += ["", "-- Questions (answer keys: server-only table)"]

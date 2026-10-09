@@ -23,6 +23,8 @@ CATALOG_DIR = Path(__file__).resolve().parent / "catalog_data"
 DIFFICULTIES = ("easy", "medium", "hard")
 RESOURCE_LEVELS = ("beginner", "intermediate", "advanced")
 RESOURCE_FORMATS = ("video", "article", "course", "interactive", "book", "documentation")
+# free: no payment needed; freemium: free to start or audit, payment for full access or a certificate.
+RESOURCE_COSTS = ("free", "freemium", "paid")
 # Expected time budget per question; used to normalise response times into features.
 EXPECTED_SECONDS = {"easy": 30, "medium": 45, "hard": 60}
 
@@ -58,6 +60,8 @@ class Resource:
     minutes: int
     description: str
     tags: tuple[str, ...]
+    cost: str = "free"
+    instructor: str | None = None
 
 
 @dataclass(frozen=True)
@@ -125,7 +129,8 @@ def load_catalog() -> Catalog:
               for t in _read("topics")}
     careers = {c["id"]: Career(c["id"], c["title"], c["icon"], c["description"], dict(c["topics"])) for c in _read("careers")}
     resources = {r["id"]: Resource(r["id"], r["topic"], r["title"], r["provider"], r["url"], r["format"], r["difficulty"],
-                                   int(r["minutes"]), r["description"], tuple(r["tags"])) for r in _read("resources")}
+                                   int(r["minutes"]), r["description"], tuple(r["tags"]), r.get("cost", "free"),
+                                   r.get("instructor")) for r in _read("resources")}
     questions = {}
     for q in _read("questions"):
         options, idx = _shuffled_options(q["id"], q["correct"], q["distractors"])
@@ -158,6 +163,8 @@ def validate(c: Catalog) -> None:
             errors.append(f"resource {r.id}: bad format {r.format}")
         if r.difficulty not in RESOURCE_LEVELS:
             errors.append(f"resource {r.id}: bad difficulty {r.difficulty}")
+        if r.cost not in RESOURCE_COSTS:
+            errors.append(f"resource {r.id}: bad cost {r.cost}")
         if not r.url.startswith("https://"):
             errors.append(f"resource {r.id}: url must be https")
     for q in c.questions.values():

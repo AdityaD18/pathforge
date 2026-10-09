@@ -3,30 +3,48 @@
 
 /* ---------------------------------------------------------------------------
    PathForge tokens
-   Midnight navy base, electric blue + violet accents. Mastery states form their
-   own scale (rose → amber → mint) and are only used to encode learner data.
+   Colours come from the active theme (src/lib/themes.ts renders one [data-theme] block per palette).
+   Utility names stay semantic: midnight = page, panel = surface, ink = text, electric/violet = accents.
+   Mastery states (rose → amber → mint by default) are only used to encode learner data.
    --------------------------------------------------------------------------- */
-@theme {
-  --color-midnight: #0a1128;
-  --color-abyss: #070c1d;
-  --color-panel: #101a3a;
-  --color-panel-2: #142048;
-  --color-line: #22305c;
-  --color-line-soft: #1a2750;
-  --color-ink: #e7ecfa;
-  --color-mist: #8a97bd;
-  --color-haze: #5d6a92;
-  --color-electric: #4c8dff;
-  --color-electric-soft: #8fb6ff;
-  --color-violet: #8b7bff;
-  --color-violet-soft: #b9afff;
-  --color-mastered: #5ed3a8;
-  --color-developing: #f2c66d;
-  --color-beginning: #ff7a8a;
-  --color-locked: #3a4673;
+@theme inline {
+  --color-midnight: var(--pf-bg);
+  --color-abyss: var(--pf-deep);
+  --color-panel: var(--pf-panel);
+  --color-panel-2: var(--pf-panel-2);
+  --color-line: var(--pf-line);
+  --color-line-soft: var(--pf-line-soft);
+  --color-ink: var(--pf-ink);
+  --color-mist: var(--pf-mist);
+  --color-haze: var(--pf-haze);
+  --color-electric: var(--pf-accent);
+  --color-electric-soft: var(--pf-accent-soft);
+  --color-violet: var(--pf-accent-2);
+  --color-violet-soft: var(--pf-accent-2-soft);
+  --color-on-accent: var(--pf-on-accent);
+  --color-mastered: var(--pf-mastered);
+  --color-developing: var(--pf-developing);
+  --color-beginning: var(--pf-beginning);
+  --color-locked: var(--pf-locked);
+}
 
+@theme {
   --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
   --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Readable type scale: nothing smaller than 14px. */
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.35;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.45;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.55;
+  --text-lg: 1.1875rem;
+  --text-lg--line-height: 1.45;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.35;
+  --text-2xl: 1.625rem;
+  --text-2xl--line-height: 1.25;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -34,20 +52,39 @@
   --radius-xl: 22px;
 
   --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+
+  --animate-pulse-ring: pulse-ring 2.2s var(--ease-out-quart) infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 color-mix(in oklab, var(--pf-accent) 55%, transparent); }
+    70% { box-shadow: 0 0 0 12px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
 }
 
 @layer base {
   html {
-    color-scheme: dark;
+    background-color: var(--pf-bg);
   }
   body {
     background-color: var(--color-midnight);
     background-image:
-      radial-gradient(1200px 600px at 85% -10%, rgb(139 123 255 / 0.10), transparent 60%),
-      radial-gradient(900px 500px at -10% 110%, rgb(76 141 255 / 0.08), transparent 60%);
+      radial-gradient(1200px 600px at 85% -10%, color-mix(in oklab, var(--pf-accent-2) 11%, transparent), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, color-mix(in oklab, var(--pf-accent) 9%, transparent), transparent 60%);
     background-attachment: fixed;
     color: var(--color-ink);
     font-family: var(--font-sans);
+    font-size: var(--text-base);
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -67,20 +104,23 @@
     border-radius: 4px;
   }
   ::selection {
-    background: rgb(139 123 255 / 0.35);
+    background: color-mix(in oklab, var(--pf-accent-2) 35%, transparent);
+  }
+  input[type="range"] {
+    accent-color: var(--pf-accent);
   }
 }
 
 @layer components {
   /* Glass is reserved for surfaces that float over the graph and the shell. */
   .glass {
-    background: linear-gradient(180deg, rgb(20 32 72 / 0.72), rgb(16 26 58 / 0.62));
-    border: 1px solid rgb(143 182 255 / 0.10);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--pf-panel-2) 78%, transparent), color-mix(in oklab, var(--pf-panel) 70%, transparent));
+    border: 1px solid color-mix(in oklab, var(--pf-accent-soft) 14%, transparent);
     backdrop-filter: blur(14px) saturate(140%);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
   }
   .surface {
-    background: rgb(16 26 58 / 0.65);
+    background: color-mix(in oklab, var(--pf-panel) 82%, transparent);
     border: 1px solid var(--color-line-soft);
   }
   .numeral {
@@ -88,18 +128,39 @@
     font-variant-numeric: lining-nums tabular-nums;
     font-variation-settings: "SOFT" 0, "opsz" 72;
   }
+  .text-gradient {
+    background: linear-gradient(100deg, var(--pf-accent-soft), var(--pf-accent-2-soft));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .bg-accent-gradient {
+    background-image: linear-gradient(120deg, var(--pf-accent), var(--pf-accent-2));
+  }
+  .skeleton-shimmer {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--pf-ink) 5%, transparent) 25%, color-mix(in oklab, var(--pf-ink) 10%, transparent) 50%, color-mix(in oklab, var(--pf-ink) 5%, transparent) 75%);
+    background-size: 200% 100%;
+  }
+}
+
+/* Smooth colour change while switching themes (class added for ~400 ms by the theme provider). */
+html.theme-switching,
+html.theme-switching *,
+html.theme-switching *::before,
+html.theme-switching *::after {
+  transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, fill 0.35s ease, stroke 0.35s ease !important;
 }
 
 /* React Flow theming */
 .react-flow {
   --xy-background-color: transparent;
-  --xy-edge-stroke: #2c3c70;
+  --xy-edge-stroke: var(--pf-line);
   --xy-edge-stroke-width: 1.5;
-  --xy-controls-button-background-color: #142048;
-  --xy-controls-button-background-color-hover: #1b2a5c;
-  --xy-controls-button-color: #e7ecfa;
-  --xy-controls-button-border-color: #22305c;
-  --xy-minimap-background-color: #0a1128;
+  --xy-controls-button-background-color: var(--pf-panel-2);
+  --xy-controls-button-background-color-hover: var(--pf-line-soft);
+  --xy-controls-button-color: var(--pf-ink);
+  --xy-controls-button-border-color: var(--pf-line);
+  --xy-minimap-background-color: var(--pf-bg);
   --xy-attribution-background-color: transparent;
 }
 .react-flow__attribution a {

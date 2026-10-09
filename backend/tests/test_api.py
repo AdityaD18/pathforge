@@ -249,3 +249,46 @@ def test_ml_metrics_endpoint(client):
     keys = {r["key"] for r in m["test"]["comparison"]}
     assert {"majority_class", "accuracy_thresholds", m["test"]["selected_model"]} <= keys
     assert all(f["description"] for f in m["features"])
+
+
+# --- themes, course costs, insights ------------------------------------------------------------------
+def test_theme_is_saved_and_validated(client, new_user):
+    _, headers = new_user
+    assert client.get("/api/me/profile", headers=headers).json()["theme"] == "system"
+    r = client.put("/api/me/profile", json={"theme": "custom", "theme_accent": "#22AA88"}, headers=headers)
+    assert r.status_code == 200 and r.json()["theme"] == "custom" and r.json()["theme_accent"] == "#22aa88"
+    assert client.put("/api/me/profile", json={"theme": "rainbow"}, headers=headers).status_code == 422
+    assert client.put("/api/me/profile", json={"theme_accent": "red"}, headers=headers).status_code == 422
+    # A theme change is not a plan change, so it records no adaptation event.
+    assert client.get("/api/me/events", headers=headers).json() == []
+
+
+def test_recommendations_filter_by_cost(client, new_user):
+    _, headers = new_user
+    client.put("/api/me/profile", json={"target_career_id": "data-analyst"}, headers=headers)
+    c = load_catalog()
+    for cost in ("free", "paid"):
+        items = client.get(f"/api/me/recommendations?cost={cost}&limit=30", headers=headers).json()["items"]
+        assert items and all(i["resource"]["cost"] == cost == c.resources[i["resource_id"]].cost for i in items)
+    assert client.get("/api/me/recommendations?cost=cheap", headers=headers).status_code == 422
+
+
+def test_insights_streaks_readiness_and_badges(client, new_user):
+    _, headers = new_user
+    client.put("/api/me/profile", json={"target_career_id": "data-analyst"}, headers=headers)
+    empty = client.get("/api/me/dashboard?tz=Asia/Kolkata", headers=headers).json()["insights"]
+    assert empty["streak"]["current"] == 0 and empty["readiness"]["score"] == 0
+    assert not any(b["earned"] for b in empty["badges"]) and len(empty["daily"]) >= 26 * 7 - 6
+
+    take(client, headers, "python-fundamentals", correct=True)
+    ins = client.get("/api/me/analytics?tz=Asia/Kolkata", headers=headers).json()["insights"]
+    assert ins["streak"] == {**ins["streak"], "current": 1, "active_today": True}
+    assert ins["daily"][-1]["date"] == ins["today"] and ins["daily"][-1]["assessments"] == 1
+    assert ins["week"]["active_days"] == 1
+    earned = {b["id"] for b in ins["badges"] if b["earned"]}
+    assert {"first-step", "first-mastery"} <= earned
+    assert 0 < ins["readiness"]["score"] < 1 and ins["breakdown"]["mastered"] == 1
+    assert ins["burndown"][-1]["remaining"] == ins["forecast"]["remaining"]
+    assert ins["topic_history"][0]["topic_id"] == "python-fundamentals"
+    # Unknown time zones fall back to UTC instead of failing.
+    assert client.get("/api/me/dashboard?tz=Not/AZone", headers=headers).status_code == 200

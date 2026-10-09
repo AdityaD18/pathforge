@@ -65,6 +65,7 @@ def resource_payload(catalog: Catalog, resource_id: str, progress: dict[str, dic
     p = progress.get(resource_id)
     return {"id": r.id, "topic_id": r.topic, "title": r.title, "provider": r.provider, "url": r.url, "format": r.format,
             "difficulty": r.difficulty, "est_minutes": r.minutes, "description": r.description, "tags": list(r.tags),
+            "cost": r.cost, "instructor": r.instructor,
             "progress": {"status": p["status"], "rating": p["rating"]} if p else None}
 
 
@@ -73,7 +74,7 @@ def unmet_prerequisites(catalog: Catalog, topic_id: str, mastery: dict[str, floa
 
 
 def recommendations(state: LearnerState, limit: int = 9, formats=None, levels=None, topic_id: str | None = None,
-                    mastery: dict[str, float] | None = None) -> dict:
+                    mastery: dict[str, float] | None = None, costs=None) -> dict:
     catalog = load_catalog()
     mastery = state.mastery if mastery is None else mastery
     ctx = state.context()
@@ -95,7 +96,8 @@ def recommendations(state: LearnerState, limit: int = 9, formats=None, levels=No
         if not focus:
             return {"items": [], "focus_topics": [], "empty_reason": "roadmap_complete"}
 
-    ranked = rank_resources(catalog, content_index(), focus, mastery, ctx, limit=limit, formats=formats, levels=levels)
+    ranked = rank_resources(catalog, content_index(), focus, mastery, ctx, limit=limit, formats=formats, levels=levels,
+                            costs=costs)
     items = [{**r, "resource": resource_payload(catalog, r["resource_id"], state.progress)} for r in ranked]
     return {
         "items": items,

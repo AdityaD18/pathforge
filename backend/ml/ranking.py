@@ -73,10 +73,12 @@ def rank_resources(
     limit: int = 9,
     formats: Iterable[str] | None = None,
     levels: Iterable[str] | None = None,
+    costs: Iterable[str] | None = None,
 ) -> list[dict]:
     """Rank resources for the given focus topics (each a roadmap step dict with topic_id)."""
     format_filter = set(formats or [])
     level_filter = set(levels or [])
+    cost_filter = set(costs or [])
     budget_minutes = ctx.weekly_hours * 60
     ranked: list[dict] = []
 
@@ -87,7 +89,8 @@ def rank_resources(
         sims = index.similarity(query)
         candidates = [r for r in catalog.resources_for(tid) if r.id not in ctx.excluded_resource_ids
                       and (not format_filter or r.format in format_filter)
-                      and (not level_filter or r.difficulty in level_filter)]
+                      and (not level_filter or r.difficulty in level_filter)
+                      and (not cost_filter or r.cost in cost_filter)]
         if not candidates:
             continue
         best_sim = max(sims[index.position(r.id)] for r in candidates) or 1.0

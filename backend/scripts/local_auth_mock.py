@@ -96,9 +96,19 @@ async def token(request: Request, grant_type: str):
     if grant_type == "password":
         email = (body.get("email") or "").strip().lower()
         stored = _passwords.get(email)
-        if not stored or _hash(body.get("password") or "", stored.split(":")[0]) != stored:
+        if stored and _hash(body.get("password") or "", stored.split(":")[0]) == stored:
+            user = next(u for u in _users.values() if u["email"] == email)
+            return _session(user)
+        # Accounts inserted by SQL (e.g. supabase/demo/demo_learners.sql) carry a bcrypt hash instead.
+        with psycopg.connect(DATABASE_URL) as conn:
+            row = conn.execute("select id, email from auth.users where lower(email) = %s and encrypted_password is not null "
+                               "and encrypted_password = crypt(%s, encrypted_password)",
+                               (email, body.get("password") or "")).fetchone()
+        if not row:
             return _error(400, "invalid_credentials", "Invalid login credentials")
-        user = next(u for u in _users.values() if u["email"] == email)
+        user = _users.setdefault(str(row[0]), {"id": str(row[0]), "aud": "authenticated", "role": "authenticated", "email": row[1],
+                                                "user_metadata": {}, "app_metadata": {"provider": "email"},
+                                                "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())})
         return _session(user)
     if grant_type == "refresh_token":
         uid = _refresh.pop(body.get("refresh_token", ""), None)

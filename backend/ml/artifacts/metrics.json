@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-09T08:40:30+00:00",
+  "generated_at": "2026-10-09T10:51:24+00:00",
   "data": {
     "synthetic": true,
     "description": "Simulated learners answering PathForge's real question bank under a documented IRT-style generative model (ml/data_generation.py). Labels are the simulator's latent ability levels.",
@@ -20,7 +20,7 @@
       "beginner_below_theta": -0.35,
       "advanced_above_theta": 0.75
     },
-    "catalog_fingerprint": "f96c92fdb7c8"
+    "catalog_fingerprint": "685020b7e719"
   },
   "features": [
     {
@@ -88,7 +88,7 @@
         "key": "random_forest",
         "name": "Random forest",
         "log_loss_mean": 0.7342881124208399,
-        "log_loss_std": 0.010979753576933097,
+        "log_loss_std": 0.010979753576933099,
         "macro_f1_mean": 0.6293418691767318,
         "macro_f1_std": 0.00885793712744649
       },
@@ -506,14 +506,14 @@
       "task": "topic retrieval from topic description",
       "k": 3,
       "queries": 26,
-      "corpus_size": 108,
+      "corpus_size": 185,
       "tfidf": {
-        "precision_at_k": 0.9230769230769231,
+        "precision_at_k": 0.9487179487179487,
         "mrr": 1.0
       },
       "random": {
-        "precision_at_k": 0.04051282051282051,
-        "mrr": 0.1356281906483572
+        "precision_at_k": 0.03641025641025641,
+        "mrr": 0.13150230295416576
       }
     }
   },
@@ -523,5 +523,5 @@
     "numpy": "2.5.3",
     "pandas": "3.0.6"
   },
-  "model_version": "hist_gradient_boosting-s42-f96c92fd"
+  "model_version": "hist_gradient_boosting-s42-685020b7"
 }
