@@ -234,6 +234,18 @@ It signs up, onboards, takes a weak diagnostic, a strong retake and a rapid-clic
 
 The connection pool disables prepared statements, so it works with Supabase's transaction-mode pooler.
 
+### Demo accounts
+
+Three demo learners show what the app looks like after weeks of use. Sign in with any of them (password `PathForgeDemo2026`):
+
+| Account | Career | History |
+|---|---|---|
+| `priya.sharma@example.com` | Data Analyst | ~13 weeks: 17 assessments (one excluded as rapid guessing), 7 topics mastered, 20+ resources completed |
+| `arjun.mehta@example.com` | ML Engineer | ~10 weeks: 20 assessments, 8 topics mastered, raised weekly hours mid-way |
+| `sara.thomas@example.com` | Frontend Developer | ~7 weeks: switched from Backend Developer in week 1, 11 assessments |
+
+**These are simulated learners, not real users.** Only their answers are simulated (the same answer model used to train the classifier). Every score, mastery update, roadmap change, recommendation and adaptation event was produced by the real API: `backend/scripts/generate_demo_learners.py` drives the FastAPI app against a local database, then shifts the timestamps onto a realistic timeline and exports `supabase/demo/demo_learners.sql`. Running that file on a Supabase project replaces any existing demo rows. The demo password is public, so anyone can sign in and change these accounts; re-run the SQL to reset them.
+
 ---
 
 ## Limitations
@@ -243,6 +255,7 @@ Stated plainly, because a portfolio project should be honest about what it hasn'
 - **The model is trained and evaluated on simulated learners.** It recovers the simulator's ground truth; accuracy on real people is unknown. How confidence and response time relate to ability in the simulator are assumptions. The next step is collecting real outcomes and re-fitting or re-calibrating.
 - **Assessments are short.** Five questions give limited evidence; a third of simulated test attempts are misclassified, nearly all by one level. Each topic has six questions, so frequent retakes repeat questions.
 - **The 3-second rapid-guess rule is a fixed heuristic**, not learned from real behaviour.
+- **The demo accounts' histories are simulated** (see Demo accounts). They show the product working end to end, not evidence about real learners.
 - **Recommendations aren't validated against learner outcomes.** The TF-IDF check only confirms topical relevance on a small, curated catalogue (108 resources). There's no collaborative signal and ratings aren't yet used for ranking.
 - **Resource links point to third-party sites** and may move; they were curated, not crawled, and aren't checked automatically.
 - **Mastery estimates don't decay over time**, and completing a resource doesn't change mastery; only assessments do.
