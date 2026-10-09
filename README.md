@@ -247,6 +247,7 @@ Stated plainly, because a portfolio project should be honest about what it hasn'
 - **Resource links point to third-party sites** and may move; they were curated, not crawled, and aren't checked automatically.
 - **Mastery estimates don't decay over time**, and completing a resource doesn't change mastery; only assessments do.
 - **No rate limiting** on the API, and assessments have no time limit or proctoring.
+- **Answer keys are in the repository.** RLS keeps them out of the browser, but anyone reading a public repo can see `catalog_data/questions.json`. For real use, keep the question bank in a private repository or load it from the database only.
 - **Local verification.** The local stack used a plain-PostgreSQL stub of Supabase's `auth` schema and a minimal auth stand-in, because Docker wasn't available in the build environment. The real Supabase Auth flow (email confirmation, JWKS verification) is implemented against the documented interfaces but was not exercised against a live project here.
 - `npm audit` reports advisories in the ESLint toolchain (`eslint-config-next`'s dependencies). They're development-only and not part of the shipped bundle.
 
