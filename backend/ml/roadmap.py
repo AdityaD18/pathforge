@@ -139,8 +139,6 @@ def _reason(catalog: Catalog, career, tid: str, score: float | None, unmet: list
         parts.append(f"unlocks {', '.join(names)}{more}")
     if score is not None:
         parts.append(f"currently estimated at {round(score * 100)}% mastery")
-    if unmet:
-        parts.append("waiting on " + ", ".join(catalog.topics[p].name for p in unmet))
     return "; ".join(parts) + "."
 
 

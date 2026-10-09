@@ -7,7 +7,7 @@ import pytest
 
 from ml.catalog import load_catalog
 from ml.data_generation import simulate_learners, theta_to_level
-from ml.features import FEATURE_NAMES, ResponseRecord, extract_features
+from ml.features import FEATURE_NAMES, ResponseRecord, attempt_validity, extract_features
 from ml.inference import ProficiencyModel, load_metrics
 from ml.item_selection import ITEMS_PER_ASSESSMENT, select_questions
 from ml.ranking import LearnerContext, focus_topics, rank_resources, target_level
@@ -185,6 +185,16 @@ def test_model_loads_and_predicts_monotonically():
     assert sum(strong.probabilities.values()) == pytest.approx(1, abs=1e-3)
 
 
+def test_rapid_guessing_is_not_counted():
+    rapid_wrong = [_r(d, False, 1, 1) for d in ("easy", "easy", "medium", "medium", "hard")]
+    counted, reason = attempt_validity(rapid_wrong)
+    assert counted is False and "under 3 seconds" in reason
+    two_rapid = rapid_wrong[:2] + [_r("medium", True, 3, 40)] * 3
+    assert attempt_validity(two_rapid) == (True, None)
+    f = extract_features(rapid_wrong, [], 0, 0)
+    assert f["rapid_guess_rate"] == 1.0
+
+
 def test_metrics_are_consistent_with_artifact():
     m = load_metrics()
     model = ProficiencyModel.load()
@@ -193,3 +203,4 @@ def test_metrics_are_consistent_with_artifact():
     rows = {r["key"]: r for r in m["test"]["comparison"]}
     assert rows[m["test"]["selected_model"]]["macro_f1"] > rows["accuracy_thresholds"]["macro_f1"]
     assert m["system_checks"]["roadmap"]["prerequisite_violations"] == 0
+    assert all(c["passed"] for c in m["test"]["behavioural_checks"]), m["test"]["behavioural_checks"]

@@ -9,7 +9,7 @@ from fastapi import HTTPException, status
 from psycopg import Connection
 
 from ml.catalog import load_catalog
-from ml.features import ResponseRecord
+from ml.features import RAPID_GUESS_MS, ResponseRecord, attempt_validity
 from ml.inference import get_model
 from ml.item_selection import select_questions
 
@@ -95,6 +95,7 @@ def _evidence(question_ids: list[str], responses: list[dict]) -> dict:
         "by_difficulty": [{"difficulty": d, "correct": sum(v), "total": len(v)} for d in ("easy", "medium", "hard")
                           if (v := by_diff.get(d))],
         "median_seconds": round(statistics.median(r["time_ms"] for r in responses) / 1000, 1) if responses else None,
+        "rapid_answers": sum(1 for r in responses if r["time_ms"] < RAPID_GUESS_MS),
         "sure_answers": len(sure),
         "sure_but_wrong": sum(1 for r in sure if not r["is_correct"]),
     }
@@ -127,13 +128,25 @@ def submit(conn: Connection, user_id: UUID, assessment_id: UUID, body: SubmitAss
     prereq_acc = [state.mastery_rows[p]["accuracy"] for p in topic.prerequisites if p in state.mastery_rows]
     estimate = get_model().predict(records, prereq_acc, len(topic.prerequisites), c.depth(topic.id))
     accuracy = sum(s["is_correct"] for s in scored) / len(scored)
+    counted, excluded_reason = attempt_validity(records)
 
     roadmap_before = state.roadmap(mastery_before)
     recs_before = [i["resource_id"] for i in recommendations(state, limit=5, mastery=mastery_before)["items"]] \
         if roadmap_before else []
 
     repo.insert_responses(conn, assessment_id, scored)
-    updated = repo.complete_assessment(conn, assessment_id, estimate, accuracy)
+    updated = repo.complete_assessment(conn, assessment_id, estimate, accuracy, counted, excluded_reason)
+    if not counted:
+        event = repo.insert_event(conn, user_id, "assessment",
+                                  f"{topic.name}: attempt not counted. {excluded_reason} Retake it when you have a few minutes.",
+                                  {"topic": {"id": topic.id, "name": topic.name}, "not_counted": True}, assessment_id)
+        responses = repo.responses_for(conn, assessment_id)
+        return {"assessment": updated, "topic": _topic_payload(topic.id), "counted": False, "excluded_reason": excluded_reason,
+                "estimate": None,
+                "previous": {"level": previous["level"], "mastery_score": previous["mastery_score"]} if previous else None,
+                "evidence": _evidence(row["question_ids"], responses), "review": _review(updated, responses),
+                "adaptation": event}
+
     repo.upsert_mastery(conn, user_id, topic.id, estimate, accuracy, assessment_id)
 
     mastery_after = {**mastery_before, topic.id: estimate.mastery_score}
@@ -155,6 +168,8 @@ def submit(conn: Connection, user_id: UUID, assessment_id: UUID, body: SubmitAss
     return {
         "assessment": updated,
         "topic": _topic_payload(topic.id),
+        "counted": True,
+        "excluded_reason": None,
         "estimate": {"level": estimate.level, "mastery_score": estimate.mastery_score, "confidence": estimate.confidence,
                      "probabilities": estimate.probabilities, "model_version": estimate.model_version,
                      "features": estimate.features},

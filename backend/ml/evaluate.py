@@ -210,3 +210,45 @@ def evaluate_recommender(k: int = 3, seed: int = 0) -> dict:
     return {"task": "topic retrieval from topic description", "k": k, "queries": len(c.topics), "corpus_size": len(index.resource_ids),
             "tfidf": {"precision_at_k": float(np.mean(p_at_k)), "mrr": float(np.mean(rr))},
             "random": {"precision_at_k": float(np.mean(rand_p)), "mrr": float(np.mean(rand_rr))}}
+
+
+# ---------------------------------------------------------------------------
+# Behavioural checks: canonical answer patterns with an obvious correct level
+# ---------------------------------------------------------------------------
+# expected=None marks patterns the model is not asked to judge: the attempt-validity rule
+# (features.attempt_validity) excludes them from mastery before the prediction is used.
+BEHAVIOUR_CASES = [
+    ("All wrong, slow, marked guess", "beginner", [(False, 1, 70000)] * 5),
+    ("All wrong, quick (3–4 s), marked guess", "beginner", [(False, 1, 3500)] * 5),
+    ("All wrong at a normal pace, marked unsure", "beginner", [(False, 2, 35000)] * 5),
+    ("All wrong, marked sure (overconfident)", "beginner", [(False, 3, 30000)] * 5),
+    ("Easy right, medium and hard wrong", "beginner", [(True, 2, 30000)] * 2 + [(False, 2, 50000)] * 3),
+    ("All right at a normal pace, marked sure", "advanced", [(True, 3, 25000)] * 5),
+    ("All right but slow (2 min each), marked unsure", ("at_least", "intermediate"), [(True, 2, 120000)] * 5),
+    ("All wrong, rapid clicks (1–2 s)", None, [(False, 1, 1500)] * 5),
+    ("All right, rapid clicks (1–2 s)", None, [(True, 3, 1500)] * 5),
+]
+
+
+def behavioural_checks(pipeline) -> list[dict]:
+    """Predict canonical patterns on a depth-0 topic with the standard 5-item difficulty mix."""
+    from .features import ResponseRecord, attempt_validity, extract_features
+
+    mix = ["easy", "easy", "medium", "medium", "hard"]
+    classes = list(pipeline.classes_)
+    out = []
+    for name, expected, pattern in BEHAVIOUR_CASES:
+        responses = [ResponseRecord(d, ok, conf, ms) for d, (ok, conf, ms) in zip(mix, pattern)]
+        X = pd.DataFrame([extract_features(responses, [], 0, 0)], columns=list(FEATURE_NAMES))
+        proba = pipeline.predict_proba(X)
+        level = classes[int(proba.argmax())]
+        counted, _ = attempt_validity(responses)
+        if expected is None:
+            passed, label = not counted, None
+        elif isinstance(expected, tuple):  # ("at_least", level)
+            passed, label = counted and ORDINAL[level] >= ORDINAL[expected[1]], f"{expected[1]} or higher"
+        else:
+            passed, label = counted and level == expected, expected
+        out.append({"case": name, "expected": label, "predicted": level, "counted": counted,
+                    "mastery_score": float(mastery_from_proba(proba, classes)[0]), "passed": bool(passed)})
+    return out

@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-10-09T08:09:07+00:00",
+  "generated_at": "2026-10-09T08:40:30+00:00",
   "data": {
     "synthetic": true,
     "description": "Simulated learners answering PathForge's real question bank under a documented IRT-style generative model (ml/data_generation.py). Labels are the simulator's latent ability levels.",
     "seed": 42,
     "n_learners": 2500,
-    "n_attempts": 18083,
-    "n_train": 14359,
-    "n_test": 3724,
+    "n_attempts": 18357,
+    "n_train": 14696,
+    "n_test": 3661,
     "n_train_learners": 2000,
     "n_test_learners": 500,
     "split": "GroupShuffleSplit by learner, 80/20",
     "class_balance": {
-      "beginner": 0.45147375988497485,
-      "intermediate": 0.3351766852845214,
-      "advanced": 0.2133495548305038
+      "beginner": 0.44582448112436673,
+      "intermediate": 0.3383995206188375,
+      "advanced": 0.21577599825679578
     },
     "label_thresholds": {
       "beginner_below_theta": -0.35,
@@ -60,6 +60,9 @@
       "name": "guess_correct_rate"
     },
     {
+      "name": "rapid_guess_rate"
+    },
+    {
       "name": "prereq_mean_accuracy"
     },
     {
@@ -71,31 +74,31 @@
   ],
   "model_selection": {
     "criterion": "Mean 5-fold GroupKFold log loss on the training set",
-    "selected": "logistic_regression",
+    "selected": "hist_gradient_boosting",
     "cv": [
       {
         "key": "logistic_regression",
         "name": "Multinomial logistic regression",
-        "log_loss_mean": 0.5791018844204883,
-        "log_loss_std": 0.01877434845431018,
-        "macro_f1_mean": 0.7201578030423665,
-        "macro_f1_std": 0.012725749593549478
+        "log_loss_mean": 0.7224845015851179,
+        "log_loss_std": 0.012060612150014733,
+        "macro_f1_mean": 0.6388722075117348,
+        "macro_f1_std": 0.0062082649325110725
       },
       {
         "key": "random_forest",
         "name": "Random forest",
-        "log_loss_mean": 0.5927957052634698,
-        "log_loss_std": 0.01634077167836674,
-        "macro_f1_mean": 0.7161632216806907,
-        "macro_f1_std": 0.011845675498530942
+        "log_loss_mean": 0.7342881124208399,
+        "log_loss_std": 0.010979753576933097,
+        "macro_f1_mean": 0.6293418691767318,
+        "macro_f1_std": 0.00885793712744649
       },
       {
         "key": "hist_gradient_boosting",
         "name": "Histogram gradient boosting",
-        "log_loss_mean": 0.5865568128937205,
-        "log_loss_std": 0.018431953354644117,
-        "macro_f1_mean": 0.7195527388172119,
-        "macro_f1_std": 0.011346109423437233
+        "log_loss_mean": 0.7210586788041132,
+        "log_loss_std": 0.011295580103628656,
+        "macro_f1_mean": 0.6418614093304431,
+        "macro_f1_std": 0.007490296880354092
       }
     ]
   },
@@ -105,85 +108,85 @@
         "key": "logistic_regression",
         "name": "Multinomial logistic regression",
         "kind": "model",
-        "selected": true,
-        "accuracy": 0.7475832438238453,
-        "macro_f1": 0.7284319838203347,
-        "balanced_accuracy": 0.7245026711023855,
-        "quadratic_kappa": 0.7766033308629876,
-        "log_loss": 0.5616932911136391,
-        "brier": 0.3428091474877803
+        "selected": false,
+        "accuracy": 0.6722207047254848,
+        "macro_f1": 0.6488269811464019,
+        "balanced_accuracy": 0.643356429402559,
+        "quadratic_kappa": 0.6694925926600271,
+        "log_loss": 0.7023246290595074,
+        "brier": 0.42427712174071613
       },
       {
         "key": "random_forest",
         "name": "Random forest",
         "kind": "model",
         "selected": false,
-        "accuracy": 0.7454350161117078,
-        "macro_f1": 0.7267381447826023,
-        "balanced_accuracy": 0.7211883123095059,
-        "quadratic_kappa": 0.7708355955799394,
-        "log_loss": 0.5694982995434921,
-        "brier": 0.34338729623436925
+        "accuracy": 0.6678503141218246,
+        "macro_f1": 0.6380074360449938,
+        "balanced_accuracy": 0.62725534042537,
+        "quadratic_kappa": 0.6549776630564249,
+        "log_loss": 0.7201375077041652,
+        "brier": 0.4348077896630322
       },
       {
         "key": "hist_gradient_boosting",
         "name": "Histogram gradient boosting",
         "kind": "model",
-        "selected": false,
-        "accuracy": 0.7494629430719656,
-        "macro_f1": 0.7304592038126797,
-        "balanced_accuracy": 0.7247774906879719,
-        "quadratic_kappa": 0.7770468312381945,
-        "log_loss": 0.5618507445436197,
-        "brier": 0.34189289689615615
+        "selected": true,
+        "accuracy": 0.6733133023763999,
+        "macro_f1": 0.6493337653064551,
+        "balanced_accuracy": 0.6424014135841803,
+        "quadratic_kappa": 0.6705896079010742,
+        "log_loss": 0.7030624312510921,
+        "brier": 0.42744800187878473
       },
       {
         "key": "majority_class",
         "name": "Majority class (always 'beginner')",
         "kind": "baseline",
         "selected": false,
-        "accuracy": 0.4640171858216971,
-        "macro_f1": 0.21129860601614084,
+        "accuracy": 0.4569789674952199,
+        "macro_f1": 0.20909886264216973,
         "balanced_accuracy": 0.3333333333333333,
         "quadratic_kappa": 0.0,
-        "log_loss": 11.107314342251621,
-        "brier": 1.0719656272846403
+        "log_loss": 11.253169211649675,
+        "brier": 1.0860420639235182
       },
       {
         "key": "accuracy_thresholds",
         "kind": "baseline",
         "selected": false,
         "name": "Raw accuracy thresholds (< 0.45 beginner, \u2265 0.85 advanced; tuned on train)",
-        "accuracy": 0.6334586466165414,
-        "macro_f1": 0.6099228518429828,
-        "balanced_accuracy": 0.5987728635431191,
-        "quadratic_kappa": 0.6205476321557303,
+        "accuracy": 0.6003824091778203,
+        "macro_f1": 0.5601338844793026,
+        "balanced_accuracy": 0.5502141949740911,
+        "quadratic_kappa": 0.531756934519467,
         "log_loss": null,
         "brier": null
       }
     ],
-    "selected_model": "logistic_regression",
+    "selected_model": "hist_gradient_boosting",
     "per_class": [
       {
         "level": "beginner",
-        "precision": 0.8348264277715566,
-        "recall": 0.8628472222222222,
-        "f1": 0.848605577689243,
-        "support": 1728
+        "precision": 0.7797101449275362,
+        "recall": 0.8039450089659295,
+        "f1": 0.7916421424367275,
+        "support": 1673
       },
       {
         "level": "intermediate",
-        "precision": 0.6243862520458265,
-        "recall": 0.6223491027732463,
-        "f1": 0.6233660130718954,
-        "support": 1226
+        "precision": 0.535548686244204,
+        "recall": 0.5694330320460148,
+        "f1": 0.5519713261648745,
+        "support": 1217
       },
       {
         "level": "advanced",
-        "precision": 0.7402234636871509,
-        "recall": 0.6883116883116883,
-        "f1": 0.7133243606998654,
-        "support": 770
+        "precision": 0.6651090342679128,
+        "recall": 0.5538261997405967,
+        "f1": 0.6043878273177636,
+        "support": 771
       }
     ],
     "confusion_matrix": {
@@ -194,19 +197,19 @@
       ],
       "matrix": [
         [
-          1491,
-          229,
-          8
+          1345,
+          296,
+          32
         ],
         [
-          285,
-          763,
-          178
+          341,
+          693,
+          183
         ],
         [
-          10,
-          230,
-          530
+          39,
+          305,
+          427
         ]
       ]
     },
@@ -218,191 +221,278 @@
       ],
       "matrix": [
         [
-          1204,
-          512,
+          1214,
+          447,
           12
         ],
         [
-          273,
-          829,
-          124
+          389,
+          739,
+          89
         ],
         [
-          30,
-          414,
-          326
+          97,
+          429,
+          245
         ]
       ]
     },
     "calibration": {
       "bins": [
         {
+          "bin_start": 0.3333333333333333,
+          "bin_end": 0.4,
+          "mean_confidence": 0.38037673741902367,
+          "observed_accuracy": 0.3469387755102041,
+          "count": 49
+        },
+        {
           "bin_start": 0.4,
           "bin_end": 0.4666666666666667,
-          "mean_confidence": 0.4546195449924211,
-          "observed_accuracy": 0.6363636363636364,
-          "count": 11
+          "mean_confidence": 0.44289096901795866,
+          "observed_accuracy": 0.4391304347826087,
+          "count": 230
         },
         {
           "bin_start": 0.4666666666666667,
           "bin_end": 0.5333333333333333,
-          "mean_confidence": 0.5076773885141815,
-          "observed_accuracy": 0.5122615803814714,
-          "count": 367
+          "mean_confidence": 0.5011598573848972,
+          "observed_accuracy": 0.5115919629057187,
+          "count": 647
         },
         {
           "bin_start": 0.5333333333333333,
           "bin_end": 0.6000000000000001,
-          "mean_confidence": 0.5666537995205366,
-          "observed_accuracy": 0.58195211786372,
-          "count": 543
+          "mean_confidence": 0.5675309061580459,
+          "observed_accuracy": 0.5707692307692308,
+          "count": 650
         },
         {
           "bin_start": 0.6000000000000001,
           "bin_end": 0.6666666666666667,
-          "mean_confidence": 0.6350167826482629,
-          "observed_accuracy": 0.6513761467889908,
-          "count": 545
+          "mean_confidence": 0.6309422933203802,
+          "observed_accuracy": 0.6301369863013698,
+          "count": 511
         },
         {
           "bin_start": 0.6666666666666667,
           "bin_end": 0.7333333333333334,
-          "mean_confidence": 0.6971205459039375,
-          "observed_accuracy": 0.6718446601941748,
-          "count": 515
+          "mean_confidence": 0.6971232182060599,
+          "observed_accuracy": 0.7380281690140845,
+          "count": 355
         },
         {
           "bin_start": 0.7333333333333334,
           "bin_end": 0.8,
-          "mean_confidence": 0.7659444077543128,
-          "observed_accuracy": 0.7615894039735099,
-          "count": 302
+          "mean_confidence": 0.76760620307882,
+          "observed_accuracy": 0.7610921501706485,
+          "count": 293
         },
         {
           "bin_start": 0.8,
           "bin_end": 0.8666666666666667,
-          "mean_confidence": 0.8355564521798762,
-          "observed_accuracy": 0.8377483443708609,
-          "count": 302
+          "mean_confidence": 0.8344108235686281,
+          "observed_accuracy": 0.8270676691729323,
+          "count": 266
         },
         {
           "bin_start": 0.8666666666666667,
           "bin_end": 0.9333333333333333,
-          "mean_confidence": 0.9012540293054689,
-          "observed_accuracy": 0.9189944134078212,
-          "count": 358
+          "mean_confidence": 0.897734869024546,
+          "observed_accuracy": 0.8809523809523809,
+          "count": 294
         },
         {
           "bin_start": 0.9333333333333333,
           "bin_end": 1.0,
-          "mean_confidence": 0.9755211694794234,
-          "observed_accuracy": 0.9731113956466069,
-          "count": 781
+          "mean_confidence": 0.9663808884844358,
+          "observed_accuracy": 0.9808743169398907,
+          "count": 366
         }
       ],
-      "expected_calibration_error": 0.011850633279673325
+      "expected_calibration_error": 0.011032826708475755
     },
     "macro_f1_gain_vs_thresholds": {
-      "mean": 0.11889338252565587,
-      "ci_low": 0.10008711368903656,
-      "ci_high": 0.13798665544479313,
+      "mean": 0.08929601273270796,
+      "ci_low": 0.068363248606416,
+      "ci_high": 0.10938251452584366,
       "n_boot": 500
     },
     "score_validity_spearman": {
-      "model_mastery_score": 0.873563604738625,
-      "raw_accuracy": 0.7131019782213375,
-      "difficulty_weighted_score": 0.6426678368877432
+      "model_mastery_score": 0.7810744217176193,
+      "raw_accuracy": 0.6260250600860384,
+      "difficulty_weighted_score": 0.5832112244752372
     },
     "feature_importance": [
       {
-        "feature": "mean_log_time_ratio",
-        "description": "Mean log of (response time \u00f7 expected time)",
-        "importance_mean": 0.20232077525752362,
-        "importance_std": 0.004930609196354856
-      },
-      {
-        "feature": "acc_medium",
-        "description": "Accuracy on medium questions",
-        "importance_mean": 0.09871367255335022,
-        "importance_std": 0.008983298054772545
-      },
-      {
-        "feature": "acc_easy",
-        "description": "Accuracy on easy questions",
-        "importance_mean": 0.038124065142111266,
-        "importance_std": 0.004745895670101069
-      },
-      {
-        "feature": "acc_hard",
-        "description": "Accuracy on hard questions",
-        "importance_mean": 0.03684112105192996,
-        "importance_std": 0.0017885359737879194
+        "feature": "weighted_score",
+        "description": "Accuracy weighted by difficulty (easy 1, medium 2, hard 3)",
+        "importance_mean": 0.05737272204848272,
+        "importance_std": 0.006201480994192723
       },
       {
         "feature": "accuracy",
         "description": "Share of questions answered correctly",
-        "importance_mean": 0.02136034976755268,
-        "importance_std": 0.004002386078274617
-      },
-      {
-        "feature": "weighted_score",
-        "description": "Accuracy weighted by difficulty (easy 1, medium 2, hard 3)",
-        "importance_mean": 0.01759770223606578,
-        "importance_std": 0.0050970886692222085
-      },
-      {
-        "feature": "prereq_mean_accuracy",
-        "description": "Mean accuracy on the latest attempts of prerequisite topics",
-        "importance_mean": 0.016247938995318532,
-        "importance_std": 0.004337558666785365
-      },
-      {
-        "feature": "sure_correct_rate",
-        "description": "Share answered 'sure' and correct",
-        "importance_mean": 0.011284413960617324,
-        "importance_std": 0.002695854939890407
-      },
-      {
-        "feature": "guess_correct_rate",
-        "description": "Share marked 'guess' that were correct (lucky guesses)",
-        "importance_mean": 0.0059248358087459875,
-        "importance_std": 0.0012129683344123145
-      },
-      {
-        "feature": "sure_wrong_rate",
-        "description": "Share answered 'sure' but wrong (overconfidence)",
-        "importance_mean": 0.004266526183379216,
-        "importance_std": 0.0024142105980917896
-      },
-      {
-        "feature": "topic_depth",
-        "description": "Longest prerequisite chain leading to this topic",
-        "importance_mean": 0.0032576284653298205,
-        "importance_std": 0.0020109043128310818
-      },
-      {
-        "feature": "prereq_coverage",
-        "description": "Share of prerequisite topics already assessed",
-        "importance_mean": 0.0020770944455906102,
-        "importance_std": 0.0005893318297369021
+        "importance_mean": 0.04654374422782861,
+        "importance_std": 0.0016460990196174015
       },
       {
         "feature": "mean_confidence",
         "description": "Mean self-reported confidence, scaled 0\u20131",
-        "importance_mean": 0.001122724047788215,
-        "importance_std": 0.0014638028574424213
+        "importance_mean": 0.03577222692650186,
+        "importance_std": 0.0028336115922211963
+      },
+      {
+        "feature": "sure_correct_rate",
+        "description": "Share answered 'sure' and correct",
+        "importance_mean": 0.03187508997501158,
+        "importance_std": 0.0037160797029696787
+      },
+      {
+        "feature": "rapid_guess_rate",
+        "description": "Share answered in under 3 seconds (too fast to have read the question)",
+        "importance_mean": 0.026649438564579554,
+        "importance_std": 0.005324347119928998
+      },
+      {
+        "feature": "acc_medium",
+        "description": "Accuracy on medium questions",
+        "importance_mean": 0.024964070164101758,
+        "importance_std": 0.0027942757979374194
+      },
+      {
+        "feature": "prereq_mean_accuracy",
+        "description": "Mean accuracy on the latest attempts of prerequisite topics",
+        "importance_mean": 0.021219959300196066,
+        "importance_std": 0.0021324052841650222
+      },
+      {
+        "feature": "acc_easy",
+        "description": "Accuracy on easy questions",
+        "importance_mean": 0.010552198611178842,
+        "importance_std": 0.0025116644019487827
+      },
+      {
+        "feature": "guess_correct_rate",
+        "description": "Share marked 'guess' that were correct (lucky guesses)",
+        "importance_mean": 0.009782461698769618,
+        "importance_std": 0.002960527239180723
+      },
+      {
+        "feature": "mean_log_time_ratio",
+        "description": "Mean log of (response time \u00f7 expected time), excluding rapid guesses",
+        "importance_mean": 0.009316089221306579,
+        "importance_std": 0.003456189198688752
+      },
+      {
+        "feature": "topic_depth",
+        "description": "Longest prerequisite chain leading to this topic",
+        "importance_mean": 0.007662690687903595,
+        "importance_std": 0.0036461765729860346
+      },
+      {
+        "feature": "acc_hard",
+        "description": "Accuracy on hard questions",
+        "importance_mean": 0.006235501488419048,
+        "importance_std": 0.002053110209209584
       },
       {
         "feature": "log_time_ratio_correct",
-        "description": "Mean log time ratio on correct answers",
-        "importance_mean": 0.0001624519530620372,
-        "importance_std": 0.0016937297358886477
+        "description": "Mean log time ratio on correct answers, excluding rapid guesses",
+        "importance_mean": 0.0035350072837112114,
+        "importance_std": 0.0021342464296557374
+      },
+      {
+        "feature": "sure_wrong_rate",
+        "description": "Share answered 'sure' but wrong (overconfidence)",
+        "importance_mean": 0.001170401412399502,
+        "importance_std": 0.001428539953376375
       },
       {
         "feature": "n_items",
         "description": "Number of questions answered",
         "importance_mean": 0.0,
         "importance_std": 0.0
+      },
+      {
+        "feature": "prereq_coverage",
+        "description": "Share of prerequisite topics already assessed",
+        "importance_mean": -0.0017308134761344185,
+        "importance_std": 0.0008563277978211245
+      }
+    ],
+    "behavioural_checks": [
+      {
+        "case": "All wrong, slow, marked guess",
+        "expected": "beginner",
+        "predicted": "beginner",
+        "counted": true,
+        "mastery_score": 0.01624498093405255,
+        "passed": true
+      },
+      {
+        "case": "All wrong, quick (3\u20134 s), marked guess",
+        "expected": "beginner",
+        "predicted": "beginner",
+        "counted": true,
+        "mastery_score": 0.06886121684025685,
+        "passed": true
+      },
+      {
+        "case": "All wrong at a normal pace, marked unsure",
+        "expected": "beginner",
+        "predicted": "beginner",
+        "counted": true,
+        "mastery_score": 0.03545598396244153,
+        "passed": true
+      },
+      {
+        "case": "All wrong, marked sure (overconfident)",
+        "expected": "beginner",
+        "predicted": "beginner",
+        "counted": true,
+        "mastery_score": 0.04943319149224739,
+        "passed": true
+      },
+      {
+        "case": "Easy right, medium and hard wrong",
+        "expected": "beginner",
+        "predicted": "beginner",
+        "counted": true,
+        "mastery_score": 0.1464743816617862,
+        "passed": true
+      },
+      {
+        "case": "All right at a normal pace, marked sure",
+        "expected": "advanced",
+        "predicted": "advanced",
+        "counted": true,
+        "mastery_score": 0.9300456792469346,
+        "passed": true
+      },
+      {
+        "case": "All right but slow (2 min each), marked unsure",
+        "expected": "intermediate or higher",
+        "predicted": "advanced",
+        "counted": true,
+        "mastery_score": 0.5865657250686789,
+        "passed": true
+      },
+      {
+        "case": "All wrong, rapid clicks (1\u20132 s)",
+        "expected": null,
+        "predicted": "intermediate",
+        "counted": false,
+        "mastery_score": 0.3991808894642823,
+        "passed": true
+      },
+      {
+        "case": "All right, rapid clicks (1\u20132 s)",
+        "expected": null,
+        "predicted": "advanced",
+        "counted": false,
+        "mastery_score": 0.9259726776345489,
+        "passed": true
       }
     ]
   },
@@ -433,5 +523,5 @@
     "numpy": "2.5.3",
     "pandas": "3.0.6"
   },
-  "model_version": "logistic_regression-s42-f96c92fd"
+  "model_version": "hist_gradient_boosting-s42-f96c92fd"
 }

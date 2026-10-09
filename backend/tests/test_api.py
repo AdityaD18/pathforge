@@ -181,6 +181,24 @@ def test_full_adaptive_loop(client, new_user):
     assert dash["recent_events"][0]["trigger"] == "assessment"
 
 
+def test_rapid_guess_attempt_is_stored_but_not_counted(client, new_user):
+    _, h = new_user
+    client.put("/api/me/profile", headers=h, json={"target_career_id": "data-analyst"})
+    a = client.post("/api/assessments", json={"topic_id": "sql-fundamentals"}, headers=h).json()
+    r = client.post(f"/api/assessments/{a['assessment']['id']}/submit",
+                    json={"responses": answer_all(a["questions"], True, confidence=3, seconds=1)}, headers=h)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert body["counted"] is False and body["estimate"] is None and "under 3 seconds" in body["excluded_reason"]
+    assert body["evidence"]["rapid_answers"] == 5 and len(body["review"]) == 5
+    assert body["assessment"]["counted"] is False
+    assert client.get("/api/me/mastery", headers=h).json() == []
+    assert "not counted" in client.get("/api/me/events", headers=h).json()[0]["summary"]
+    assert client.get("/api/me/analytics", headers=h).json()["totals"]["assessments"] == 0
+    roadmap = client.get("/api/me/roadmap", headers=h).json()
+    assert roadmap["summary"]["mastered"] == 0
+
+
 def test_recommendations_explanations_and_progress(client, new_user):
     _, h = new_user
     client.put("/api/me/profile", headers=h, json={"target_career_id": "frontend-developer", "preferred_formats": ["article"]})

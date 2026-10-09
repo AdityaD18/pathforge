@@ -153,6 +153,7 @@ def main(n_learners: int = 2500, seed: int = DEFAULT_SEED) -> dict:
             "macro_f1_gain_vs_thresholds": ev.grouped_bootstrap_diff(test["learner_id"], y_te, pred, th_pred, seed=seed),
             "score_validity_spearman": ev.score_validity(test, mastery),
             "feature_importance": ev.feature_importance(best, X_te, y_te, seed),
+            "behavioural_checks": ev.behavioural_checks(best),
         },
         "system_checks": {"roadmap": ev.evaluate_roadmaps(seed=seed), "recommender": ev.evaluate_recommender(seed=seed)},
         "environment": {"python": platform.python_version(), "scikit_learn": sklearn.__version__,
@@ -170,6 +171,10 @@ def main(n_learners: int = 2500, seed: int = DEFAULT_SEED) -> dict:
     sel = next(r for r in test_rows if r["selected"])
     thr = next(r for r in test_rows if r["key"] == "accuracy_thresholds")
     print(f"Test macro-F1 {sel['macro_f1']:.3f} vs thresholds {thr['macro_f1']:.3f}; accuracy {sel['accuracy']:.3f} vs {thr['accuracy']:.3f}")
+    for chk in metrics["test"]["behavioural_checks"]:
+        status = "PASS" if chk["passed"] else "FAIL"
+        outcome = f"{chk['predicted']} ({chk['mastery_score']:.2f})" if chk["counted"] else "not counted (validity rule)"
+        print(f"  [{status}] {chk['case']}: {outcome}")
     return metrics
 
 

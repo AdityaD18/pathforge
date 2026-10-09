@@ -14,6 +14,10 @@ Generative model (per simulated learner)
     (4 options) and a 5% slip rate: P(know) = sigmoid(1.7·a·(θ − b))
   * self-reported confidence depends on whether the item was known and on a
     per-learner overconfidence trait; response time shrinks with ability
+  * response time is only weakly related to ability (reading speed and noise dominate)
+  * disengagement: 30% of learners rapid-guess on a share of items (10–60%), answering
+    in under 3 s at chance accuracy, regardless of ability. Without this, the model learns
+    "fast means expert" and rates click-through guessing as advanced.
 """
 from __future__ import annotations
 
@@ -81,7 +85,8 @@ def simulate_learners(n_learners: int = 2500, seed: int = DEFAULT_SEED, catalog:
         g = np_rng.normal(0, 1)
         affinity = {d: np_rng.normal(0, 0.6) for d in domains}
         overconfidence = np_rng.normal(0, 0.5)
-        speed = np_rng.normal(0, 0.2)
+        speed = np_rng.normal(0, 0.3)  # people differ in reading speed independently of ability
+        rapid_rate = rng.uniform(0.1, 0.6) if rng.random() < 0.3 else 0.0
 
         theta: dict[str, float] = {}
         for tid in topo:
@@ -104,6 +109,12 @@ def simulate_learners(n_learners: int = 2500, seed: int = DEFAULT_SEED, catalog:
             responses = []
             for q in items:
                 p = params[q.id]
+                if rng.random() < rapid_rate:  # disengaged rapid guess: no information about ability
+                    u = rng.random()
+                    confidence = 1 if u < 0.6 else (2 if u < 0.9 else 3)
+                    responses.append(ResponseRecord(q.difficulty, rng.random() < GUESS_RATE, confidence,
+                                                    int(rng.uniform(0.8, 2.9) * 1000)))
+                    continue
                 knows = rng.random() < _sigmoid(1.7 * p.a * (theta[tid] - p.b))
                 correct = (rng.random() > SLIP_RATE) if knows else (rng.random() < GUESS_RATE)
                 u = rng.random()
@@ -114,8 +125,9 @@ def simulate_learners(n_learners: int = 2500, seed: int = DEFAULT_SEED, catalog:
                     p_guess = min(max(0.5 - 0.15 * overconfidence, 0.1), 0.85)
                     p_sure = min(max(0.15 + 0.1 * overconfidence, 0.02), 0.5)
                     confidence = 1 if u < p_guess else (3 if u < p_guess + p_sure else 2)
-                log_t = (math.log(EXPECTED_SECONDS[q.difficulty]) + 0.25 * (p.b - theta[tid])
-                         - 0.15 * knows + speed + np_rng.normal(0, 0.35))
+                # Time is only weakly tied to ability; real timing is dominated by reading speed and noise.
+                log_t = (math.log(EXPECTED_SECONDS[q.difficulty]) + 0.10 * (p.b - theta[tid])
+                         - 0.10 * knows + speed + np_rng.normal(0, 0.45))
                 time_ms = int(min(max(math.exp(log_t), 3.0), 300.0) * 1000)
                 responses.append(ResponseRecord(q.difficulty, correct, confidence, time_ms))
 

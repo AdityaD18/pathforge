@@ -1,0 +1,116 @@
+@import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
+
+/* ---------------------------------------------------------------------------
+   PathForge tokens
+   Midnight navy base, electric blue + violet accents. Mastery states form their
+   own scale (rose → amber → mint) and are only used to encode learner data.
+   --------------------------------------------------------------------------- */
+@theme {
+  --color-midnight: #0a1128;
+  --color-abyss: #070c1d;
+  --color-panel: #101a3a;
+  --color-panel-2: #142048;
+  --color-line: #22305c;
+  --color-line-soft: #1a2750;
+  --color-ink: #e7ecfa;
+  --color-mist: #8a97bd;
+  --color-haze: #5d6a92;
+  --color-electric: #4c8dff;
+  --color-electric-soft: #8fb6ff;
+  --color-violet: #8b7bff;
+  --color-violet-soft: #b9afff;
+  --color-mastered: #5ed3a8;
+  --color-developing: #f2c66d;
+  --color-beginning: #ff7a8a;
+  --color-locked: #3a4673;
+
+  --font-display: "Fraunces Variable", "Iowan Old Style", Georgia, serif;
+  --font-sans: "Schibsted Grotesk Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background-color: var(--color-midnight);
+    background-image:
+      radial-gradient(1200px 600px at 85% -10%, rgb(139 123 255 / 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgb(76 141 255 / 0.08), transparent 60%);
+    background-attachment: fixed;
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-electric);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: rgb(139 123 255 / 0.35);
+  }
+}
+
+@layer components {
+  /* Glass is reserved for surfaces that float over the graph and the shell. */
+  .glass {
+    background: linear-gradient(180deg, rgb(20 32 72 / 0.72), rgb(16 26 58 / 0.62));
+    border: 1px solid rgb(143 182 255 / 0.10);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+  }
+  .surface {
+    background: rgb(16 26 58 / 0.65);
+    border: 1px solid var(--color-line-soft);
+  }
+  .numeral {
+    font-family: var(--font-display);
+    font-variant-numeric: lining-nums tabular-nums;
+    font-variation-settings: "SOFT" 0, "opsz" 72;
+  }
+}
+
+/* React Flow theming */
+.react-flow {
+  --xy-background-color: transparent;
+  --xy-edge-stroke: #2c3c70;
+  --xy-edge-stroke-width: 1.5;
+  --xy-controls-button-background-color: #142048;
+  --xy-controls-button-background-color-hover: #1b2a5c;
+  --xy-controls-button-color: #e7ecfa;
+  --xy-controls-button-border-color: #22305c;
+  --xy-minimap-background-color: #0a1128;
+  --xy-attribution-background-color: transparent;
+}
+.react-flow__attribution a {
+  color: var(--color-haze);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

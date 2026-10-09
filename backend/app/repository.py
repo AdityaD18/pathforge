@@ -66,7 +66,7 @@ def upsert_mastery(conn: Connection, user_id: UUID, topic_id: str, est, accuracy
 ASSESSMENT_COLUMNS = (
     "id, user_id, topic_id, status::text as status, question_ids, predicted_level::text as predicted_level, "
     "mastery_score::float as mastery_score, probabilities, features, accuracy::float as accuracy, model_version, "
-    "started_at, submitted_at")
+    "counted, excluded_reason, started_at, submitted_at")
 
 
 def open_assessment(conn: Connection, user_id: UUID, topic_id: str) -> dict | None:
@@ -75,7 +75,7 @@ def open_assessment(conn: Connection, user_id: UUID, topic_id: str) -> dict | No
 
 
 def seen_question_ids(conn: Connection, user_id: UUID, topic_id: str) -> list[str]:
-    rows = conn.execute("select distinct unnest(question_ids) as qid from public.assessments "
+    rows = conn.execute("select distinct unnest(question_ids) as qid from public.assessments "  # includes uncounted attempts
                         "where user_id = %s and topic_id = %s and status = 'submitted'", (user_id, topic_id)).fetchall()
     return [r["qid"] for r in rows]
 
@@ -91,13 +91,15 @@ def get_assessment(conn: Connection, user_id: UUID, assessment_id: UUID, lock: b
                         (assessment_id, user_id)).fetchone()
 
 
-def complete_assessment(conn: Connection, assessment_id: UUID, est, accuracy: float) -> dict:
+def complete_assessment(conn: Connection, assessment_id: UUID, est, accuracy: float, counted: bool = True,
+                        excluded_reason: str | None = None) -> dict:
     return conn.execute(
         f"""update public.assessments set status = 'submitted', submitted_at = now(), predicted_level = %s,
-              mastery_score = %s, probabilities = %s, features = %s, accuracy = %s, model_version = %s
+              mastery_score = %s, probabilities = %s, features = %s, accuracy = %s, model_version = %s,
+              counted = %s, excluded_reason = %s
             where id = %s returning {ASSESSMENT_COLUMNS}""",
         (est.level, est.mastery_score, Jsonb(est.probabilities), Jsonb(est.features), accuracy, est.model_version,
-         assessment_id)).fetchone()
+         counted, excluded_reason, assessment_id)).fetchone()
 
 
 def insert_responses(conn: Connection, assessment_id: UUID, rows: list[dict]) -> None:
@@ -164,7 +166,7 @@ def list_events(conn: Connection, user_id: UUID, limit: int) -> list[dict]:
 def submitted_history(conn: Connection, user_id: UUID) -> list[dict]:
     return conn.execute(
         "select id, topic_id, predicted_level::text as level, mastery_score::float as mastery_score, accuracy::float as accuracy, "
-        "submitted_at from public.assessments where user_id = %s and status = 'submitted' order by submitted_at",
+        "submitted_at from public.assessments where user_id = %s and status = 'submitted' and counted order by submitted_at",
         (user_id,)).fetchall()
 
 
@@ -174,7 +176,7 @@ def response_stats(conn: Connection, user_id: UUID) -> list[dict]:
            from public.assessment_responses r
            join public.assessments a on a.id = r.assessment_id
            join public.questions q on q.id = r.question_id
-           where a.user_id = %s""", (user_id,)).fetchall()
+           where a.user_id = %s and a.counted""", (user_id,)).fetchall()
 
 
 # --- catalog consistency ------------------------------------------------------------------------------

@@ -58,7 +58,8 @@ def describe_change(
         unlocked = [t for t in unlocked if t != topic["id"]]
     changes["unlocked"] = [{"id": t, "name": name(t)} for t in unlocked]
     if unlocked:
-        sentences.append("Unlocked: " + ", ".join(name(t) for t in unlocked) + ".")
+        label = "Ready to start" if roadmap_before is None else "Unlocked"
+        sentences.append(f"{label}: " + ", ".join(name(t) for t in unlocked) + ".")
 
     if roadmap_before is not None or roadmap_after is not None:
         sb = (roadmap_before or {}).get("summary", {})
