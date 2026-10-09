@@ -1,0 +1,437 @@
+{
+  "generated_at": "2026-10-09T08:06:45+00:00",
+  "data": {
+    "synthetic": true,
+    "description": "Simulated learners answering PathForge's real question bank under a documented IRT-style generative model (ml/data_generation.py). Labels are the simulator's latent ability levels.",
+    "seed": 42,
+    "n_learners": 2500,
+    "n_attempts": 18083,
+    "n_train": 14359,
+    "n_test": 3724,
+    "n_train_learners": 2000,
+    "n_test_learners": 500,
+    "split": "GroupShuffleSplit by learner, 80/20",
+    "class_balance": {
+      "beginner": 0.45147375988497485,
+      "intermediate": 0.3351766852845214,
+      "advanced": 0.2133495548305038
+    },
+    "label_thresholds": {
+      "beginner_below_theta": -0.35,
+      "advanced_above_theta": 0.75
+    },
+    "catalog_fingerprint": "f96c92fdb7c8"
+  },
+  "features": [
+    {
+      "name": "n_items"
+    },
+    {
+      "name": "accuracy"
+    },
+    {
+      "name": "weighted_score"
+    },
+    {
+      "name": "acc_easy"
+    },
+    {
+      "name": "acc_medium"
+    },
+    {
+      "name": "acc_hard"
+    },
+    {
+      "name": "mean_log_time_ratio"
+    },
+    {
+      "name": "log_time_ratio_correct"
+    },
+    {
+      "name": "mean_confidence"
+    },
+    {
+      "name": "sure_correct_rate"
+    },
+    {
+      "name": "sure_wrong_rate"
+    },
+    {
+      "name": "guess_correct_rate"
+    },
+    {
+      "name": "prereq_mean_accuracy"
+    },
+    {
+      "name": "prereq_coverage"
+    },
+    {
+      "name": "topic_depth"
+    }
+  ],
+  "model_selection": {
+    "criterion": "Mean 5-fold GroupKFold log loss on the training set",
+    "selected": "logistic_regression",
+    "cv": [
+      {
+        "key": "logistic_regression",
+        "name": "Multinomial logistic regression",
+        "log_loss_mean": 0.5791018844204883,
+        "log_loss_std": 0.01877434845431018,
+        "macro_f1_mean": 0.7201578030423665,
+        "macro_f1_std": 0.012725749593549478
+      },
+      {
+        "key": "random_forest",
+        "name": "Random forest",
+        "log_loss_mean": 0.5927957052634698,
+        "log_loss_std": 0.01634077167836674,
+        "macro_f1_mean": 0.7161632216806907,
+        "macro_f1_std": 0.011845675498530942
+      },
+      {
+        "key": "hist_gradient_boosting",
+        "name": "Histogram gradient boosting",
+        "log_loss_mean": 0.5865568128937205,
+        "log_loss_std": 0.018431953354644117,
+        "macro_f1_mean": 0.7195527388172119,
+        "macro_f1_std": 0.011346109423437233
+      }
+    ]
+  },
+  "test": {
+    "comparison": [
+      {
+        "key": "logistic_regression",
+        "name": "Multinomial logistic regression",
+        "kind": "model",
+        "selected": true,
+        "accuracy": 0.7475832438238453,
+        "macro_f1": 0.7284319838203347,
+        "balanced_accuracy": 0.7245026711023855,
+        "quadratic_kappa": 0.7766033308629876,
+        "log_loss": 0.5616932911136391,
+        "brier": 0.3428091474877803
+      },
+      {
+        "key": "random_forest",
+        "name": "Random forest",
+        "kind": "model",
+        "selected": false,
+        "accuracy": 0.7454350161117078,
+        "macro_f1": 0.7267381447826023,
+        "balanced_accuracy": 0.7211883123095059,
+        "quadratic_kappa": 0.7708355955799394,
+        "log_loss": 0.5694982995434921,
+        "brier": 0.34338729623436925
+      },
+      {
+        "key": "hist_gradient_boosting",
+        "name": "Histogram gradient boosting",
+        "kind": "model",
+        "selected": false,
+        "accuracy": 0.7494629430719656,
+        "macro_f1": 0.7304592038126797,
+        "balanced_accuracy": 0.7247774906879719,
+        "quadratic_kappa": 0.7770468312381945,
+        "log_loss": 0.5618507445436197,
+        "brier": 0.34189289689615615
+      },
+      {
+        "key": "majority_class",
+        "name": "Majority class (always 'beginner')",
+        "kind": "baseline",
+        "selected": false,
+        "accuracy": 0.4640171858216971,
+        "macro_f1": 0.21129860601614084,
+        "balanced_accuracy": 0.3333333333333333,
+        "quadratic_kappa": 0.0,
+        "log_loss": 11.107314342251621,
+        "brier": 1.0719656272846403
+      },
+      {
+        "key": "accuracy_thresholds",
+        "kind": "baseline",
+        "selected": false,
+        "name": "Raw accuracy thresholds (< 0.45 beginner, \u2265 0.85 advanced; tuned on train)",
+        "accuracy": 0.6334586466165414,
+        "macro_f1": 0.6099228518429828,
+        "balanced_accuracy": 0.5987728635431191,
+        "quadratic_kappa": 0.6205476321557303,
+        "log_loss": null,
+        "brier": null
+      }
+    ],
+    "selected_model": "logistic_regression",
+    "per_class": [
+      {
+        "level": "beginner",
+        "precision": 0.8348264277715566,
+        "recall": 0.8628472222222222,
+        "f1": 0.848605577689243,
+        "support": 1728
+      },
+      {
+        "level": "intermediate",
+        "precision": 0.6243862520458265,
+        "recall": 0.6223491027732463,
+        "f1": 0.6233660130718954,
+        "support": 1226
+      },
+      {
+        "level": "advanced",
+        "precision": 0.7402234636871509,
+        "recall": 0.6883116883116883,
+        "f1": 0.7133243606998654,
+        "support": 770
+      }
+    ],
+    "confusion_matrix": {
+      "labels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "matrix": [
+        [
+          1491,
+          229,
+          8
+        ],
+        [
+          285,
+          763,
+          178
+        ],
+        [
+          10,
+          230,
+          530
+        ]
+      ]
+    },
+    "baseline_confusion_matrix": {
+      "labels": [
+        "beginner",
+        "intermediate",
+        "advanced"
+      ],
+      "matrix": [
+        [
+          1204,
+          512,
+          12
+        ],
+        [
+          273,
+          829,
+          124
+        ],
+        [
+          30,
+          414,
+          326
+        ]
+      ]
+    },
+    "calibration": {
+      "bins": [
+        {
+          "bin_start": 0.4,
+          "bin_end": 0.4666666666666667,
+          "mean_confidence": 0.4546195449924211,
+          "observed_accuracy": 0.6363636363636364,
+          "count": 11
+        },
+        {
+          "bin_start": 0.4666666666666667,
+          "bin_end": 0.5333333333333333,
+          "mean_confidence": 0.5076773885141815,
+          "observed_accuracy": 0.5122615803814714,
+          "count": 367
+        },
+        {
+          "bin_start": 0.5333333333333333,
+          "bin_end": 0.6000000000000001,
+          "mean_confidence": 0.5666537995205366,
+          "observed_accuracy": 0.58195211786372,
+          "count": 543
+        },
+        {
+          "bin_start": 0.6000000000000001,
+          "bin_end": 0.6666666666666667,
+          "mean_confidence": 0.6350167826482629,
+          "observed_accuracy": 0.6513761467889908,
+          "count": 545
+        },
+        {
+          "bin_start": 0.6666666666666667,
+          "bin_end": 0.7333333333333334,
+          "mean_confidence": 0.6971205459039375,
+          "observed_accuracy": 0.6718446601941748,
+          "count": 515
+        },
+        {
+          "bin_start": 0.7333333333333334,
+          "bin_end": 0.8,
+          "mean_confidence": 0.7659444077543128,
+          "observed_accuracy": 0.7615894039735099,
+          "count": 302
+        },
+        {
+          "bin_start": 0.8,
+          "bin_end": 0.8666666666666667,
+          "mean_confidence": 0.8355564521798762,
+          "observed_accuracy": 0.8377483443708609,
+          "count": 302
+        },
+        {
+          "bin_start": 0.8666666666666667,
+          "bin_end": 0.9333333333333333,
+          "mean_confidence": 0.9012540293054689,
+          "observed_accuracy": 0.9189944134078212,
+          "count": 358
+        },
+        {
+          "bin_start": 0.9333333333333333,
+          "bin_end": 1.0,
+          "mean_confidence": 0.9755211694794234,
+          "observed_accuracy": 0.9731113956466069,
+          "count": 781
+        }
+      ],
+      "expected_calibration_error": 0.011850633279673325
+    },
+    "macro_f1_gain_vs_thresholds": {
+      "mean": 0.11889338252565587,
+      "ci_low": 0.10008711368903656,
+      "ci_high": 0.13798665544479313,
+      "n_boot": 500
+    },
+    "score_validity_spearman": {
+      "model_mastery_score": 0.873563604738625,
+      "raw_accuracy": 0.7131019782213375,
+      "difficulty_weighted_score": 0.6426678368877432
+    },
+    "feature_importance": [
+      {
+        "feature": "mean_log_time_ratio",
+        "description": "Mean log of (response time \u00f7 expected time)",
+        "importance_mean": 0.20232077525752362,
+        "importance_std": 0.004930609196354856
+      },
+      {
+        "feature": "acc_medium",
+        "description": "Accuracy on medium questions",
+        "importance_mean": 0.09871367255335022,
+        "importance_std": 0.008983298054772545
+      },
+      {
+        "feature": "acc_easy",
+        "description": "Accuracy on easy questions",
+        "importance_mean": 0.038124065142111266,
+        "importance_std": 0.004745895670101069
+      },
+      {
+        "feature": "acc_hard",
+        "description": "Accuracy on hard questions",
+        "importance_mean": 0.03684112105192996,
+        "importance_std": 0.0017885359737879194
+      },
+      {
+        "feature": "accuracy",
+        "description": "Share of questions answered correctly",
+        "importance_mean": 0.02136034976755268,
+        "importance_std": 0.004002386078274617
+      },
+      {
+        "feature": "weighted_score",
+        "description": "Accuracy weighted by difficulty (easy 1, medium 2, hard 3)",
+        "importance_mean": 0.01759770223606578,
+        "importance_std": 0.0050970886692222085
+      },
+      {
+        "feature": "prereq_mean_accuracy",
+        "description": "Mean accuracy on the latest attempts of prerequisite topics",
+        "importance_mean": 0.016247938995318532,
+        "importance_std": 0.004337558666785365
+      },
+      {
+        "feature": "sure_correct_rate",
+        "description": "Share answered 'sure' and correct",
+        "importance_mean": 0.011284413960617324,
+        "importance_std": 0.002695854939890407
+      },
+      {
+        "feature": "guess_correct_rate",
+        "description": "Share marked 'guess' that were correct (lucky guesses)",
+        "importance_mean": 0.0059248358087459875,
+        "importance_std": 0.0012129683344123145
+      },
+      {
+        "feature": "sure_wrong_rate",
+        "description": "Share answered 'sure' but wrong (overconfidence)",
+        "importance_mean": 0.004266526183379216,
+        "importance_std": 0.0024142105980917896
+      },
+      {
+        "feature": "topic_depth",
+        "description": "Longest prerequisite chain leading to this topic",
+        "importance_mean": 0.0032576284653298205,
+        "importance_std": 0.0020109043128310818
+      },
+      {
+        "feature": "prereq_coverage",
+        "description": "Share of prerequisite topics already assessed",
+        "importance_mean": 0.0020770944455906102,
+        "importance_std": 0.0005893318297369021
+      },
+      {
+        "feature": "mean_confidence",
+        "description": "Mean self-reported confidence, scaled 0\u20131",
+        "importance_mean": 0.001122724047788215,
+        "importance_std": 0.0014638028574424213
+      },
+      {
+        "feature": "log_time_ratio_correct",
+        "description": "Mean log time ratio on correct answers",
+        "importance_mean": 0.0001624519530620372,
+        "importance_std": 0.0016937297358886477
+      },
+      {
+        "feature": "n_items",
+        "description": "Number of questions answered",
+        "importance_mean": 0.0,
+        "importance_std": 0.0
+      }
+    ]
+  },
+  "system_checks": {
+    "roadmap": {
+      "roadmaps_checked": 600,
+      "steps_checked": 6043,
+      "prerequisite_violations": 0
+    },
+    "recommender": {
+      "task": "topic retrieval from topic description",
+      "k": 3,
+      "queries": 26,
+      "corpus_size": 108,
+      "tfidf": {
+        "precision_at_k": 0.9230769230769231,
+        "mrr": 1.0
+      },
+      "random": {
+        "precision_at_k": 0.04051282051282051,
+        "mrr": 0.1356281906483572
+      }
+    }
+  },
+  "environment": {
+    "python": "3.13.16",
+    "scikit_learn": "1.9.1",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5"
+  },
+  "model_version": "logistic_regression-s42-f96c92fd"
+}
